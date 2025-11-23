@@ -1,5 +1,6 @@
 import React from "react";
 import { ViewState } from "../types";
+import { APP_NAME, SCHOOL_NAME } from "../constants";
 import {
   HomeIcon,
   PlusCircleIcon,
@@ -38,10 +39,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
         <img src="./logo.png" alt="Logo" className="w-10 h-10 object-contain" />
         <div>
           <h1 className="text-lg font-bold text-blue-600 dark:text-blue-400 leading-tight">
-            SMP N 1 Seririt
+            {SCHOOL_NAME}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Sistem Sarana Prasarana
+            {APP_NAME}
           </p>
         </div>
       </div>
@@ -89,9 +90,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Sistem Sarpras
+              {APP_NAME}
             </p>
-            <p className="text-xs text-slate-500">Versi 1.0.1</p>
+            <p className="text-xs text-slate-500">Versi 1.0.2</p>
           </div>
         </div>
       </div>

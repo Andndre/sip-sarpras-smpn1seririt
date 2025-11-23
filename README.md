@@ -1,6 +1,6 @@
 # Sistem Peminjaman Sarana Prasarana (SIP Sarpras) - SMPN 1 Seririt
 
-Aplikasi desktop untuk manajemen peminjaman sarana dan prasarana di SMPN 1 Seririt. Aplikasi ini dibangun menggunakan teknologi web modern yang dibungkus menjadi aplikasi desktop menggunakan Electron.
+**SIP Sarpras** adalah aplikasi desktop untuk manajemen peminjaman sarana dan prasarana di SMPN 1 Seririt. Aplikasi ini dibangun menggunakan teknologi web modern yang dibungkus menjadi aplikasi desktop menggunakan Electron.
 
 <div align="center">
   <img src="./public/logo.png" alt="Logo" width="150" />

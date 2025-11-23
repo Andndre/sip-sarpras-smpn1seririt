@@ -1,7 +1,7 @@
 {
   "name": "sistem-sarpras",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Sistem Peminjaman Sarana Prasarana SMPN 1 Seririt",
   "author": {
     "name": "SMPN 1 Seririt",
@@ -21,7 +21,7 @@
   },
   "build": {
     "appId": "com.smpn1seririt.sarpras",
-    "productName": "Peminjaman Sarpras SMPN 1 Seririt",
+    "productName": "SIP Sarpras",
     "icon": "public/logo.png",
     "directories": {
       "output": "release"

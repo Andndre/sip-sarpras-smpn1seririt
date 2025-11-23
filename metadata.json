@@ -1,5 +1,5 @@
 {
-  "name": "Sistem Peminjaman Sarana Prasarana (Web Version)",
+  "name": "SIP Sarpras",
   "description": "A web-based implementation of the SMP Negeri 1 Seririt inventory system, featuring complete asset management, transaction logging, and status tracking.",
   "requestFramePermissions": []
 }
