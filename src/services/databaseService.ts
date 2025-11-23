@@ -22,56 +22,11 @@ const KEYS = {
 };
 
 // Initial Seed Data
-const SEED_BARANG: Barang[] = [
-  {
-    id_barang: 1,
-    nama_barang: "Laptop Asus ROG",
-    kode_barang: "LPT-001",
-    kondisi: KondisiBarang.BAIK,
-    deskripsi: "Unit + Charger + Mouse",
-    status: StatusBarang.TERSEDIA,
-  },
-  {
-    id_barang: 2,
-    nama_barang: "Proyektor Epson",
-    kode_barang: "PRJ-001",
-    kondisi: KondisiBarang.BAIK,
-    deskripsi: "Unit + Kabel Power + HDMI",
-    status: StatusBarang.TERSEDIA,
-  },
-  {
-    id_barang: 3,
-    nama_barang: "Kamera DSLR Canon",
-    kode_barang: "CAM-001",
-    kondisi: KondisiBarang.RUSAK_RINGAN,
-    deskripsi: "Body + Lensa Kit",
-    status: StatusBarang.TERSEDIA,
-  },
-];
+const SEED_BARANG: Barang[] = [];
 
-const SEED_RUANGAN: Ruangan[] = [
-  {
-    id_ruangan: 1,
-    nama_ruangan: "Lab Komputer 1",
-    status: StatusRuangan.TERSEDIA,
-  },
-  { id_ruangan: 2, nama_ruangan: "Aula Utama", status: StatusRuangan.TERSEDIA },
-];
+const SEED_RUANGAN: Ruangan[] = [];
 
-const SEED_PEMINJAM: Peminjam[] = [
-  {
-    id_peminjam: 1,
-    nama_peminjam: "Budi Santoso",
-    tipe_peminjam: TipePeminjam.GURU,
-    nomor_induk: "198001012005011001",
-  },
-  {
-    id_peminjam: 2,
-    nama_peminjam: "Siti Aminah",
-    tipe_peminjam: TipePeminjam.SISWA,
-    nomor_induk: "2023001",
-  },
-];
+const SEED_PEMINJAM: Peminjam[] = [];
 
 class DatabaseService {
   constructor() {
