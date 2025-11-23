@@ -1,9 +1,14 @@
 {
   "name": "sistem-sarpras",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sistem Peminjaman Sarana Prasarana SMPN 1 Seririt",
-  "author": "SMPN 1 Seririt",
+  "author": {
+    "name": "SMPN 1 Seririt",
+    "email": "smpn01seririt@gmail.com"
+  },
+  "homepage": "https://smpn1seririt.sch.id",
+  "license": "MIT",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -12,7 +17,7 @@
     "preview": "vite preview",
     "electron:build-ts": "tsc -p electron/tsconfig.json && echo '{\"type\": \"commonjs\"}' > dist-electron/package.json",
     "electron:dev": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"npm run electron:build-ts && wait-on tcp:9000 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "npm run build && npm run electron:build-ts && electron-builder"
+    "electron:build": "npm run build && npm run electron:build-ts && electron-builder --win --linux"
   },
   "build": {
     "appId": "com.smpn1seririt.sarpras",
@@ -42,7 +47,10 @@
       "createDesktopShortcut": true
     },
     "linux": {
-      "target": "AppImage",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "public/logo.png",
       "category": "Office"
     }
