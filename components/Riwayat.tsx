@@ -12,6 +12,10 @@ const Riwayat: React.FC = () => {
   const [historyTrans, setHistoryTrans] = useState<TransaksiPeminjaman[]>([]);
   const [peminjamMap, setPeminjamMap] = useState<Record<number, Peminjam>>({});
 
+  // Filter State
+  const [filterStartDate, setFilterStartDate] = useState<string>("");
+  const [filterEndDate, setFilterEndDate] = useState<string>("");
+
   // Modal State
   const [selectedTrans, setSelectedTrans] = useState<number | null>(null);
   const [details, setDetails] = useState<DetailTransaksi[]>([]);
@@ -59,6 +63,13 @@ const Riwayat: React.FC = () => {
     setSelectedTrans(transId);
   };
 
+  const filteredHistory = historyTrans.filter((t) => {
+    if (!filterStartDate && !filterEndDate) return true;
+    if (filterStartDate && t.tanggal_pinjam < filterStartDate) return false;
+    if (filterEndDate && t.tanggal_pinjam > filterEndDate) return false;
+    return true;
+  });
+
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
       <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
@@ -66,7 +77,43 @@ const Riwayat: React.FC = () => {
         Riwayat Peminjaman Selesai
       </h2>
 
-      {historyTrans.length === 0 ? (
+      <div className="mb-6 flex flex-wrap gap-4 items-end bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+            Dari Tanggal
+          </label>
+          <input
+            type="date"
+            value={filterStartDate}
+            onChange={(e) => setFilterStartDate(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+            Sampai Tanggal
+          </label>
+          <input
+            type="date"
+            value={filterEndDate}
+            onChange={(e) => setFilterEndDate(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        {(filterStartDate || filterEndDate) && (
+          <button
+            onClick={() => {
+              setFilterStartDate("");
+              setFilterEndDate("");
+            }}
+            className="px-3 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium"
+          >
+            Reset Filter
+          </button>
+        )}
+      </div>
+
+      {filteredHistory.length === 0 ? (
         <div className="text-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600">
           <p>Belum ada riwayat peminjaman.</p>
         </div>
@@ -84,7 +131,7 @@ const Riwayat: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {historyTrans.map((t) => (
+              {filteredHistory.map((t) => (
                 <tr
                   key={t.id_transaksi}
                   className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
