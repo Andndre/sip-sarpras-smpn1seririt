@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { dbService } from "../services/databaseService";
+import { excelService } from "../services/excelService";
 import { Barang, KondisiBarang, StatusBarang } from "../types";
 import { useAlert } from "./AlertModal";
 import {
@@ -10,14 +11,19 @@ import {
   InformationCircleIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
+  DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
 const DataBarang: React.FC = () => {
   const { showAlert } = useAlert();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [barangList, setBarangList] = useState<Barang[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Search & Pagination State
   const [searchTerm, setSearchTerm] = useState("");
@@ -142,20 +148,103 @@ const DataBarang: React.FC = () => {
     }
   };
 
+  const handleExport = () => {
+    const dataToExport = barangList.map((item) => ({
+      "Nama Barang": item.nama_barang,
+      "Kode Barang": item.kode_barang,
+      Kondisi: item.kondisi,
+      Deskripsi: item.deskripsi,
+      Status: item.status,
+    }));
+    excelService.exportToExcel(dataToExport, "Data_Barang");
+    showAlert("success", "Data berhasil diexport ke Excel");
+  };
+
+  const handleDownloadTemplate = () => {
+    const columns = ["nama_barang", "kode_barang", "kondisi", "deskripsi"];
+    excelService.downloadTemplate(columns, "Template_Barang");
+    showAlert("success", "Template berhasil diunduh");
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await excelService.readExcel(file);
+      let successCount = 0;
+      let failCount = 0;
+
+      data.forEach((row: any) => {
+        try {
+          // Validate required fields
+          if (!row.nama_barang || !row.kode_barang) {
+            failCount++;
+            return;
+          }
+
+          // Map Excel row to Barang object
+          // Default values if missing
+          const newBarang: Omit<Barang, "id_barang"> = {
+            nama_barang: row.nama_barang,
+            kode_barang: row.kode_barang,
+            kondisi: Object.values(KondisiBarang).includes(row.kondisi)
+              ? row.kondisi
+              : KondisiBarang.BAIK,
+            deskripsi: row.deskripsi || "",
+            status: StatusBarang.TERSEDIA,
+          };
+
+          dbService.createBarang(newBarang);
+          successCount++;
+        } catch (error) {
+          failCount++;
+        }
+      });
+
+      loadData();
+      showAlert(
+        successCount > 0 ? "success" : "error",
+        `Import selesai. Berhasil: ${successCount}, Gagal: ${failCount}`
+      );
+      setIsImportModalOpen(false);
+    } catch (error) {
+      showAlert("error", "Gagal membaca file Excel");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
           <CubeIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
           Data Barang
         </h2>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Tambah Barang
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 shadow-sm text-sm"
+          >
+            <ArrowDownTrayIcon className="w-5 h-5" />
+            Import
+          </button>
+          <button
+            onClick={handleExport}
+            className="bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2 shadow-sm text-sm"
+          >
+            <ArrowUpTrayIcon className="w-5 h-5" />
+            Export
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm text-sm"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Tambah
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -557,6 +646,61 @@ const DataBarang: React.FC = () => {
               >
                 Tutup
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                Import Data Barang
+              </h3>
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+                  Gunakan template yang telah disediakan untuk memastikan format
+                  data benar.
+                </p>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-2"
+                >
+                  <DocumentArrowDownIcon className="w-5 h-5" />
+                  Download Template Excel
+                </button>
+              </div>
+
+              <div
+                className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImport}
+                  className="hidden"
+                  accept=".xlsx, .xls"
+                />
+                <ArrowDownTrayIcon className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                  Klik untuk upload file Excel
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Format: .xlsx, .xls
+                </p>
+              </div>
             </div>
           </div>
         </div>
