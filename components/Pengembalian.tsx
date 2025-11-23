@@ -140,19 +140,19 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h2 className="text-xl font-bold text-slate-800 mb-4">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
           Daftar Peminjaman Aktif
         </h2>
 
         {activeTrans.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+          <div className="text-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600">
             <p>Tidak ada peminjaman aktif saat ini.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-medium">
+              <thead className="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 uppercase text-xs font-medium">
                 <tr>
                   <th className="px-6 py-3">ID</th>
                   <th className="px-6 py-3">Peminjam</th>
@@ -161,29 +161,32 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                   <th className="px-6 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                 {activeTrans.map((t) => (
-                  <tr key={t.id_transaksi} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">
+                  <tr
+                    key={t.id_transaksi}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                  >
+                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
                       #{t.id_transaksi}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-slate-800">
+                      <div className="font-medium text-slate-800 dark:text-slate-200">
                         {peminjamMap[t.id_peminjam]?.nama_peminjam}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
                         {peminjamMap[t.id_peminjam]?.nomor_induk}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                       {new Date(t.tanggal_pinjam).toLocaleDateString("id-ID")}
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${
                           new Date(t.tanggal_rencana_kembali) < new Date()
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                         }`}
                       >
                         {new Date(t.tanggal_rencana_kembali).toLocaleDateString(
@@ -211,14 +214,14 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
       {/* Return Modal */}
       {selectedTrans && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
                 Proses Pengembalian #{selectedTrans}
               </h3>
               <button
                 onClick={() => setSelectedTrans(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
@@ -229,21 +232,21 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                 {details.map((d) => (
                   <div
                     key={d.id_detail}
-                    className="p-4 border border-slate-200 rounded-lg bg-slate-50"
+                    className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-700/50"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold text-slate-800">
+                        <h4 className="font-semibold text-slate-800 dark:text-white">
                           {d.id_barang
                             ? itemsMap[`b_${d.id_barang}`]
                             : itemsMap[`r_${d.id_ruangan}`]}
                         </h4>
-                        <span className="text-xs text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           {d.id_barang ? "Barang" : "Ruangan"}
                         </span>
                       </div>
                       {d.id_barang && (
-                        <div className="text-xs px-2 py-1 bg-slate-200 rounded text-slate-600">
+                        <div className="text-xs px-2 py-1 bg-slate-200 dark:bg-slate-600 rounded text-slate-600 dark:text-slate-300">
                           Kondisi Awal: {d.kondisi_sebelum}
                         </div>
                       )}
@@ -252,11 +255,11 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                     {d.id_barang ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                         <div>
-                          <label className="block text-xs font-medium text-slate-700 mb-1">
+                          <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Kondisi Akhir
                           </label>
                           <select
-                            className="w-full p-2 text-sm border border-slate-300 rounded-lg"
+                            className="w-full p-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white"
                             value={returnConditions[d.id_detail] || ""}
                             onChange={(e) =>
                               handleConditionChange(d.id_detail, e.target.value)
@@ -277,8 +280,8 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                                 KondisiBarang.RUSAK_RINGAN ||
                               returnConditions[d.id_detail] ===
                                 KondisiBarang.RUSAK_BERAT
-                                ? "text-red-600"
-                                : "text-slate-700"
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-slate-700 dark:text-slate-300"
                             }`}
                           >
                             {returnConditions[d.id_detail] ===
@@ -295,13 +298,13 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                           </label>
                           <input
                             type="text"
-                            className={`w-full p-2 text-sm border rounded-lg focus:ring-2 ${
+                            className={`w-full p-2 text-sm border rounded-lg focus:ring-2 dark:bg-slate-700 dark:text-white ${
                               returnConditions[d.id_detail] ===
                                 KondisiBarang.RUSAK_RINGAN ||
                               returnConditions[d.id_detail] ===
                                 KondisiBarang.RUSAK_BERAT
-                                ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
-                                : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                                ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-800"
+                                : "border-slate-300 dark:border-slate-600 focus:ring-blue-500 focus:border-blue-500"
                             }`}
                             placeholder={
                               returnConditions[d.id_detail] ===
@@ -319,7 +322,7 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-green-600 flex items-center gap-2 bg-green-50 p-2 rounded border border-green-100">
+                      <div className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2 bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-100 dark:border-green-800/50">
                         <CheckCircleIcon className="w-4 h-4" />
                         Ruangan otomatis ditandai selesai
                       </div>
@@ -329,10 +332,10 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-xl flex justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-b-xl flex justify-end gap-3">
               <button
                 onClick={() => setSelectedTrans(null)}
-                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+                className="px-4 py-2 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
               >
                 Batal
               </button>
