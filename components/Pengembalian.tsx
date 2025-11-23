@@ -147,7 +147,7 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
 
         {activeTrans.length === 0 ? (
           <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-            <p>Tidak ada transaksi peminjaman aktif saat ini.</p>
+            <p>Tidak ada peminjaman aktif saat ini.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

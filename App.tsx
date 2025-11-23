@@ -20,6 +20,8 @@ import {
   ArrowPathRoundedSquareIcon,
   CheckCircleIcon,
   PlusIcon,
+  PlusCircleIcon,
+  ClockIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
@@ -66,11 +68,11 @@ const App: React.FC = () => {
             {/* Quick Actions */}
             <div className="flex gap-4">
               <button
-                onClick={() => setCurrentView("TRANSAKSI_BARU")}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
+                onClick={() => setCurrentView("PEMINJAMAN_BARU")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
               >
-                <PlusIcon className="w-5 h-5" />
-                Transaksi Baru
+                <PlusCircleIcon className="w-5 h-5" />
+                Peminjaman Baru
               </button>
               <button
                 onClick={() => setCurrentView("PENGEMBALIAN")}
@@ -102,10 +104,10 @@ const App: React.FC = () => {
                 color="bg-indigo-500"
               />
               <StatCard
-                title="Transaksi Aktif"
+                title="Peminjaman Aktif"
                 value={stats?.transaksiAktif || 0}
-                icon={ArrowPathRoundedSquareIcon}
-                color="bg-amber-500"
+                icon={ClockIcon}
+                color="bg-orange-500"
               />
             </div>
 
@@ -119,7 +121,7 @@ const App: React.FC = () => {
                 <div className="space-y-4">
                   {recentActivity.length === 0 ? (
                     <p className="text-sm text-slate-500 italic text-center py-4">
-                      Belum ada aktivitas transaksi.
+                      Belum ada aktivitas peminjaman.
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -130,7 +132,7 @@ const App: React.FC = () => {
                         >
                           <div>
                             <p className="text-sm font-medium text-slate-800">
-                              Transaksi #{t.id_transaksi}
+                              Peminjaman #{t.id_transaksi}
                             </p>
                             <p className="text-xs text-slate-500">
                               {new Date(t.tanggal_pinjam).toLocaleDateString(
@@ -205,7 +207,7 @@ const App: React.FC = () => {
       case "DATA_PEMINJAM":
         return <DataPeminjam />;
 
-      case "TRANSAKSI_BARU":
+      case "PEMINJAMAN_BARU":
         return <TransaksiBaru onSuccess={() => setCurrentView("DASHBOARD")} />;
 
       case "PENGEMBALIAN":

@@ -69,7 +69,14 @@ export interface DetailTransaksi {
 }
 
 // Helper types for UI
-export type ViewState = 'DASHBOARD' | 'TRANSAKSI_BARU' | 'PENGEMBALIAN' | 'RIWAYAT' | 'DATA_BARANG' | 'DATA_RUANGAN' | 'DATA_PEMINJAM';
+export type ViewState =
+  | "DASHBOARD"
+  | "PEMINJAMAN_BARU"
+  | "PENGEMBALIAN"
+  | "RIWAYAT"
+  | "DATA_BARANG"
+  | "DATA_RUANGAN"
+  | "DATA_PEMINJAM";
 
 export interface DashboardStats {
   totalBarang: number;

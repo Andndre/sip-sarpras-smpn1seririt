@@ -234,7 +234,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
       cart.map((item) => ({ type: item.type, id: item.id }))
     );
 
-    showAlert("Berhasil", "Transaksi berhasil dibuat!", "success", onSuccess);
+    showAlert("Berhasil", "Peminjaman berhasil dibuat!", "success", onSuccess);
   };
 
   return (

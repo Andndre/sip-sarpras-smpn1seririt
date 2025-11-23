@@ -63,12 +63,12 @@ const Riwayat: React.FC = () => {
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
       <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
         <ClockIcon className="w-6 h-6 text-slate-500" />
-        Riwayat Transaksi Selesai
+        Riwayat Peminjaman Selesai
       </h2>
 
       {historyTrans.length === 0 ? (
         <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-          <p>Belum ada riwayat transaksi.</p>
+          <p>Belum ada riwayat peminjaman.</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
