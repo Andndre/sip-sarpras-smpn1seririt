@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { dbService } from "../services/databaseService";
 import { Barang, KondisiBarang, StatusBarang } from "../types";
+import { useAlert } from "./AlertModal";
 import {
   CubeIcon,
   PlusIcon,
@@ -12,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const DataBarang: React.FC = () => {
+  const { showAlert } = useAlert();
   const [barangList, setBarangList] = useState<Barang[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -111,7 +113,7 @@ const DataBarang: React.FC = () => {
           deskripsi,
           status,
         });
-        alert("Data barang berhasil diperbarui");
+        showAlert("Berhasil", "Data barang berhasil diperbarui", "success");
       } else {
         dbService.createBarang({
           nama_barang: nama,
@@ -120,7 +122,7 @@ const DataBarang: React.FC = () => {
           deskripsi,
           status,
         });
-        alert("Barang baru berhasil ditambahkan");
+        showAlert("Berhasil", "Barang baru berhasil ditambahkan", "success");
       }
 
       setIsModalOpen(false);
@@ -136,7 +138,7 @@ const DataBarang: React.FC = () => {
       setIsDeleteModalOpen(false);
       setSelectedItem(null);
       loadData();
-      alert("Barang berhasil dihapus");
+      showAlert("Berhasil", "Barang berhasil dihapus", "success");
     }
   };
 

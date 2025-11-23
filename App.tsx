@@ -6,18 +6,31 @@ import Riwayat from "./components/Riwayat";
 import DataPeminjam from "./components/DataPeminjam";
 import DataBarang from "./components/DataBarang";
 import DataRuangan from "./components/DataRuangan";
-import { ViewState, DashboardStats } from "./types";
+import {
+  ViewState,
+  DashboardStats,
+  TransaksiPeminjaman,
+  Barang,
+  KondisiBarang,
+} from "./types";
 import { dbService } from "./services/databaseService";
 import {
   CubeIcon,
   BuildingOfficeIcon,
   ArrowPathRoundedSquareIcon,
   CheckCircleIcon,
+  PlusIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>("DASHBOARD");
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<TransaksiPeminjaman[]>(
+    []
+  );
+  const [damagedItems, setDamagedItems] = useState<Barang[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Simulate loading stats on mount and view change
@@ -26,6 +39,17 @@ const App: React.FC = () => {
     // Small timeout to simulate async fetch
     setTimeout(() => {
       setStats(dbService.getStats());
+
+      // Fetch Recent Activity (Last 5 transactions)
+      const allTrans = dbService.getTransaksi();
+      setRecentActivity([...allTrans].reverse().slice(0, 5));
+
+      // Fetch Damaged Items
+      const allBarang = dbService.getBarang();
+      setDamagedItems(
+        allBarang.filter((b) => b.kondisi !== KondisiBarang.BAIK)
+      );
+
       setLoading(false);
     }, 300);
   }, [currentView]);
@@ -38,6 +62,24 @@ const App: React.FC = () => {
             <h2 className="text-2xl font-bold text-slate-800">
               Dashboard Overview
             </h2>
+
+            {/* Quick Actions */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => setCurrentView("TRANSAKSI_BARU")}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
+              >
+                <PlusIcon className="w-5 h-5" />
+                Transaksi Baru
+              </button>
+              <button
+                onClick={() => setCurrentView("PENGEMBALIAN")}
+                className="flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg hover:bg-slate-50 shadow-sm transition-all"
+              >
+                <ArrowPathIcon className="w-5 h-5" />
+                Proses Pengembalian
+              </button>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Stat Cards */}
@@ -68,23 +110,87 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Activity */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-lg font-semibold mb-4 text-slate-700">
+                <h3 className="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2">
+                  <ArrowPathRoundedSquareIcon className="w-5 h-5 text-slate-400" />
                   Aktivitas Terbaru
                 </h3>
                 <div className="space-y-4">
-                  <p className="text-sm text-slate-500 italic">
-                    Belum ada aktivitas baru.
-                  </p>
+                  {recentActivity.length === 0 ? (
+                    <p className="text-sm text-slate-500 italic text-center py-4">
+                      Belum ada aktivitas transaksi.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentActivity.map((t) => (
+                        <div
+                          key={t.id_transaksi}
+                          className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">
+                              Transaksi #{t.id_transaksi}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {new Date(t.tanggal_pinjam).toLocaleDateString(
+                                "id-ID"
+                              )}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              t.status_transaksi === "Dipinjam"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {t.status_transaksi}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Damaged Items Alert */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-lg font-semibold mb-4 text-slate-700">
-                  Peringatan Stok
+                <h3 className="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                  Barang Perlu Perhatian
                 </h3>
-                <p className="text-sm text-slate-500">
-                  Semua barang dalam kondisi aman.
-                </p>
+                <div className="space-y-4">
+                  {damagedItems.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CheckCircleIcon className="w-12 h-12 text-green-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-500">
+                        Semua barang dalam kondisi baik.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {damagedItems.map((b) => (
+                        <div
+                          key={b.id_barang}
+                          className="flex justify-between items-start p-3 bg-red-50 rounded-lg border border-red-100"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">
+                              {b.nama_barang}
+                            </p>
+                            <p className="text-xs text-slate-500 font-mono">
+                              {b.kode_barang}
+                            </p>
+                          </div>
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">
+                            {b.kondisi}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

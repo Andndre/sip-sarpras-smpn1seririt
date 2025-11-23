@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { dbService } from "../services/databaseService";
+import { useAlert } from "./AlertModal";
 import {
   Barang,
   Ruangan,
@@ -16,6 +17,7 @@ import {
   CalendarIcon,
   UserPlusIcon,
   XMarkIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
 interface TransaksiBaruProps {
@@ -31,6 +33,7 @@ type CartItem = {
 };
 
 const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
+  const { showAlert } = useAlert();
   const [peminjamList, setPeminjamList] = useState<Peminjam[]>([]);
   const [availableBarang, setAvailableBarang] = useState<Barang[]>([]);
   const [availableRuangan, setAvailableRuangan] = useState<Ruangan[]>([]);
@@ -43,6 +46,8 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
 
   const [activeTab, setActiveTab] = useState<"BARANG" | "RUANGAN">("BARANG");
   const [selectedItem, setSelectedItem] = useState<number | "">("");
+  const [itemSearchTerm, setItemSearchTerm] = useState("");
+  const [isItemDropdownOpen, setIsItemDropdownOpen] = useState(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -144,6 +149,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
       }
     }
     setSelectedItem("");
+    setItemSearchTerm("");
   };
 
   const handleRemoveItem = (index: number) => {
@@ -202,16 +208,22 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
     }
 
     if (!finalPeminjamId) {
-      alert("Mohon pilih peminjam terlebih dahulu");
+      showAlert("Perhatian", "Mohon pilih peminjam terlebih dahulu", "warning");
       return;
     }
     if (!tanggalKembali) {
-      alert("Mohon tentukan tanggal rencana kembali");
+      showAlert(
+        "Perhatian",
+        "Mohon tentukan tanggal rencana kembali",
+        "warning"
+      );
       return;
     }
     if (cart.length === 0) {
-      alert(
-        "Keranjang peminjaman masih kosong. Silakan tambah Barang atau Ruangan."
+      showAlert(
+        "Perhatian",
+        "Keranjang peminjaman masih kosong. Silakan tambah Barang atau Ruangan.",
+        "warning"
       );
       return;
     }
@@ -222,8 +234,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
       cart.map((item) => ({ type: item.type, id: item.id }))
     );
 
-    alert("Transaksi berhasil dibuat!");
-    onSuccess();
+    showAlert("Berhasil", "Transaksi berhasil dibuat!", "success", onSuccess);
   };
 
   return (
@@ -383,6 +394,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
               onClick={() => {
                 setActiveTab("BARANG");
                 setSelectedItem("");
+                setItemSearchTerm("");
               }}
             >
               Barang
@@ -396,6 +408,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
               onClick={() => {
                 setActiveTab("RUANGAN");
                 setSelectedItem("");
+                setItemSearchTerm("");
               }}
             >
               Ruangan
@@ -403,28 +416,130 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
           </div>
 
           <div className="flex gap-4 items-end">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Pilih {activeTab === "BARANG" ? "Barang" : "Ruangan"}
+                Cari {activeTab === "BARANG" ? "Barang (Nama/Kode)" : "Ruangan"}
               </label>
-              <select
-                className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedItem}
-                onChange={(e) => setSelectedItem(Number(e.target.value))}
-              >
-                <option value="">-- Pilih Item --</option>
-                {activeTab === "BARANG"
-                  ? availableBarang.map((b) => (
-                      <option key={b.id_barang} value={b.id_barang}>
-                        {b.kode_barang} - {b.nama_barang} ({b.kondisi})
-                      </option>
-                    ))
-                  : availableRuangan.map((r) => (
-                      <option key={r.id_ruangan} value={r.id_ruangan}>
-                        {r.nama_ruangan}
-                      </option>
-                    ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 ${
+                    selectedItem
+                      ? "border-green-500 bg-green-50"
+                      : "border-slate-300"
+                  }`}
+                  placeholder={
+                    activeTab === "BARANG"
+                      ? "Ketik nama atau kode barang..."
+                      : "Ketik nama ruangan..."
+                  }
+                  value={itemSearchTerm}
+                  onChange={(e) => {
+                    setItemSearchTerm(e.target.value);
+                    setSelectedItem(""); // Reset selection when typing
+                    setIsItemDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsItemDropdownOpen(true)}
+                />
+                {selectedItem && (
+                  <div className="absolute right-3 top-2.5 text-green-600">
+                    <CheckCircleIcon className="w-5 h-5" />
+                  </div>
+                )}
+                {isItemDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-0"
+                      onClick={() => setIsItemDropdownOpen(false)}
+                    ></div>
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {activeTab === "BARANG" ? (
+                        availableBarang.filter(
+                          (b) =>
+                            b.nama_barang
+                              .toLowerCase()
+                              .includes(itemSearchTerm.toLowerCase()) ||
+                            b.kode_barang
+                              .toLowerCase()
+                              .includes(itemSearchTerm.toLowerCase())
+                        ).length > 0 ? (
+                          <ul>
+                            {availableBarang
+                              .filter(
+                                (b) =>
+                                  b.nama_barang
+                                    .toLowerCase()
+                                    .includes(itemSearchTerm.toLowerCase()) ||
+                                  b.kode_barang
+                                    .toLowerCase()
+                                    .includes(itemSearchTerm.toLowerCase())
+                              )
+                              .map((b) => (
+                                <li
+                                  key={b.id_barang}
+                                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-slate-700 border-b border-slate-50 last:border-0"
+                                  onClick={() => {
+                                    setSelectedItem(b.id_barang);
+                                    setItemSearchTerm(
+                                      `${b.kode_barang} - ${b.nama_barang}`
+                                    );
+                                    setIsItemDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-medium">
+                                    {b.nama_barang}
+                                  </div>
+                                  <div className="text-xs text-slate-500">
+                                    {b.kode_barang} - {b.kondisi}
+                                  </div>
+                                </li>
+                              ))}
+                          </ul>
+                        ) : (
+                          <div className="p-4 text-center text-sm text-slate-500">
+                            Barang tidak ditemukan
+                          </div>
+                        )
+                      ) : availableRuangan.filter((r) =>
+                          r.nama_ruangan
+                            .toLowerCase()
+                            .includes(itemSearchTerm.toLowerCase())
+                        ).length > 0 ? (
+                        <ul>
+                          {availableRuangan
+                            .filter((r) =>
+                              r.nama_ruangan
+                                .toLowerCase()
+                                .includes(itemSearchTerm.toLowerCase())
+                            )
+                            .map((r) => (
+                              <li
+                                key={r.id_ruangan}
+                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-slate-700 border-b border-slate-50 last:border-0"
+                                onClick={() => {
+                                  setSelectedItem(r.id_ruangan);
+                                  setItemSearchTerm(r.nama_ruangan);
+                                  setIsItemDropdownOpen(false);
+                                }}
+                              >
+                                <div className="font-medium">
+                                  {r.nama_ruangan}
+                                </div>
+                                <div className="text-xs text-slate-500">
+                                  {r.status}
+                                </div>
+                              </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <div className="p-4 text-center text-sm text-slate-500">
+                          Ruangan tidak ditemukan
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { dbService } from "../services/databaseService";
 import { Ruangan, StatusRuangan } from "../types";
+import { useAlert } from "./AlertModal";
 import {
   BuildingOfficeIcon,
   PlusIcon,
@@ -11,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const DataRuangan: React.FC = () => {
+  const { showAlert } = useAlert();
   const [ruanganList, setRuanganList] = useState<Ruangan[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -87,13 +89,13 @@ const DataRuangan: React.FC = () => {
           nama_ruangan: nama,
           status,
         });
-        alert("Data ruangan berhasil diperbarui");
+        showAlert("Berhasil", "Data ruangan berhasil diperbarui", "success");
       } else {
         dbService.createRuangan({
           nama_ruangan: nama,
           status,
         });
-        alert("Ruangan baru berhasil ditambahkan");
+        showAlert("Berhasil", "Ruangan baru berhasil ditambahkan", "success");
       }
 
       setIsModalOpen(false);
@@ -109,7 +111,7 @@ const DataRuangan: React.FC = () => {
       setIsDeleteModalOpen(false);
       setSelectedItem(null);
       loadData();
-      alert("Ruangan berhasil dihapus");
+      showAlert("Berhasil", "Ruangan berhasil dihapus", "success");
     }
   };
 

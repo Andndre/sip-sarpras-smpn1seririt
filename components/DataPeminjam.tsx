@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { dbService } from "../services/databaseService";
 import { Peminjam, TipePeminjam } from "../types";
+import { useAlert } from "./AlertModal";
 import {
   UserPlusIcon,
   XMarkIcon,
@@ -11,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const DataPeminjam: React.FC = () => {
+  const { showAlert } = useAlert();
   const [peminjamList, setPeminjamList] = useState<Peminjam[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -91,14 +93,14 @@ const DataPeminjam: React.FC = () => {
           nomor_induk: nomorInduk,
           tipe_peminjam: tipe,
         });
-        alert("Data peminjam berhasil diperbarui");
+        showAlert("Berhasil", "Data peminjam berhasil diperbarui", "success");
       } else {
         dbService.createPeminjam({
           nama_peminjam: nama,
           nomor_induk: nomorInduk,
           tipe_peminjam: tipe,
         });
-        alert("Peminjam berhasil ditambahkan");
+        showAlert("Berhasil", "Peminjam berhasil ditambahkan", "success");
       }
 
       setIsModalOpen(false);
@@ -114,7 +116,7 @@ const DataPeminjam: React.FC = () => {
       setIsDeleteModalOpen(false);
       setSelectedItem(null);
       loadData();
-      alert("Peminjam berhasil dihapus");
+      showAlert("Berhasil", "Peminjam berhasil dihapus", "success");
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { dbService } from "../services/databaseService";
+import { useAlert } from "./AlertModal";
 import {
   TransaksiPeminjaman,
   DetailTransaksi,
@@ -21,6 +22,7 @@ interface PengembalianProps {
 }
 
 const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
+  const { showAlert } = useAlert();
   const [activeTrans, setActiveTrans] = useState<TransaksiPeminjaman[]>([]);
   const [peminjamMap, setPeminjamMap] = useState<Record<number, Peminjam>>({});
 
@@ -108,7 +110,11 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
             cond === KondisiBarang.RUSAK_BERAT) &&
           !note
         ) {
-          alert("Keterangan wajib diisi untuk barang rusak!");
+          showAlert(
+            "Perhatian",
+            "Keterangan wajib diisi untuk barang rusak!",
+            "warning"
+          );
           return;
         }
       }
@@ -122,10 +128,14 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
 
     dbService.completeTransaksi(selectedTrans, returns);
 
-    alert("Pengembalian berhasil diproses!");
+    showAlert(
+      "Berhasil",
+      "Pengembalian berhasil diproses!",
+      "success",
+      onSuccess
+    );
     setSelectedTrans(null);
     loadData(); // Refresh list
-    onSuccess(); // Trigger parent refresh if needed
   };
 
   return (
