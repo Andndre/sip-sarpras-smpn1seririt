@@ -30,6 +30,11 @@
       "target": "nsis",
       "icon": "public/logo.png"
     },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
     "linux": {
       "target": "AppImage",
       "icon": "public/logo.png",
