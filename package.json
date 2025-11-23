@@ -14,7 +14,7 @@
   },
   "build": {
     "appId": "com.smpn1seririt.sarpras",
-    "productName": "Sistem Sarpras SMPN 1 Seririt",
+    "productName": "Peminjaman Sarpras SMPN 1 Seririt",
     "icon": "public/logo.png",
     "directories": {
       "output": "release"
