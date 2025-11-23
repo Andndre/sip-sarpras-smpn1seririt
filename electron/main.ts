@@ -1,16 +1,21 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, nativeImage } from "electron";
 import path from "path";
 
 const isDev = process.env.NODE_ENV === "development";
 
 function createWindow() {
+  // Create icon using nativeImage for better Linux support
+  const iconPath = path.join(
+    __dirname,
+    isDev ? "../public/logo.png" : "../dist/logo.png"
+  );
+  const appIcon = nativeImage.createFromPath(iconPath);
+
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(
-      __dirname,
-      isDev ? "../public/logo.png" : "../dist/logo.png"
-    ),
+    icon: appIcon,
+    title: "SIP Sarpras",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
