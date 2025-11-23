@@ -3,10 +3,27 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:build-ts": "tsc -p electron/tsconfig.json && echo '{\"type\": \"commonjs\"}' > dist-electron/package.json",
+    "electron:dev": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"npm run electron:build-ts && wait-on tcp:9000 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && npm run electron:build-ts && electron-builder"
+  },
+  "build": {
+    "appId": "com.smpn1seririt.sarpras",
+    "productName": "Sistem Sarpras SMPN 1 Seririt",
+    "icon": "public/logo.png",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ]
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -19,7 +36,12 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.3",
+    "electron-builder": "^26.0.12",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "wait-on": "^9.0.3"
   }
 }
