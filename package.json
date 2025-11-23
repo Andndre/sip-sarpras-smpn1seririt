@@ -2,6 +2,8 @@
   "name": "sistem-sarpras",
   "private": true,
   "version": "1.0.0",
+  "description": "Sistem Peminjaman Sarana Prasarana SMPN 1 Seririt",
+  "author": "SMPN 1 Seririt",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -23,7 +25,16 @@
       "dist/**/*",
       "dist-electron/**/*",
       "package.json"
-    ]
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/logo.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/logo.png",
+      "category": "Office"
+    }
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
