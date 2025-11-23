@@ -34,13 +34,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
 
   return (
     <div className="w-64 bg-white dark:bg-slate-900 text-slate-800 dark:text-white h-screen flex flex-col fixed left-0 top-0 shadow-xl z-50 border-r border-slate-200 dark:border-slate-800 transition-colors duration-200">
-      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-        <h1 className="text-lg font-bold text-blue-600 dark:text-blue-400 leading-tight">
-          SMP N 1 Seririt
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Sistem Sarana Prasarana
-        </p>
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+        <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+        <div>
+          <h1 className="text-lg font-bold text-blue-600 dark:text-blue-400 leading-tight">
+            SMP N 1 Seririt
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Sistem Sarana Prasarana
+          </p>
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
