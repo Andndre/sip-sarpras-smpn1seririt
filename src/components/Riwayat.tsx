@@ -83,7 +83,7 @@ const Riwayat: React.FC = () => {
   });
 
   const handleExport = () => {
-    const dataToExport = historyTrans.map((t) => ({
+    const dataToExport = filteredHistory.map((t) => ({
       ID: t.id_transaksi,
       Peminjam: peminjamMap[t.id_peminjam]?.nama_peminjam || "Unknown",
       "Nomor Induk": peminjamMap[t.id_peminjam]?.nomor_induk || "-",
@@ -137,16 +137,21 @@ const Riwayat: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+            className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 shadow-sm text-sm"
           >
-            <ArrowDownTrayIcon className="w-4 h-4" />
+            <ArrowDownTrayIcon className="w-5 h-5" />
             Import
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
+            disabled={filteredHistory.length === 0}
+            className={`px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm text-sm ${
+              filteredHistory.length === 0
+                ? "bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500"
+                : "bg-orange-600 text-white hover:bg-orange-700"
+            }`}
           >
-            <ArrowUpTrayIcon className="w-4 h-4" />
+            <ArrowUpTrayIcon className="w-5 h-5" />
             Export
           </button>
         </div>
