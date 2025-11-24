@@ -93,7 +93,7 @@ class DatabaseService {
   }
 
   // --- Master Data Setters ---
-  createPeminjam(peminjam: Omit<Peminjam, "id_peminjam">): void {
+  createPeminjam(peminjam: Omit<Peminjam, "id_peminjam">): number {
     const table = this.getTable<Peminjam>(KEYS.PEMINJAM);
     // Check for duplicate nomor_induk
     if (table.some((p) => p.nomor_induk === peminjam.nomor_induk)) {
@@ -106,6 +106,7 @@ class DatabaseService {
     const newPeminjam = { ...peminjam, id_peminjam: newId };
     table.push(newPeminjam);
     this.setTable(KEYS.PEMINJAM, table);
+    return newId;
   }
 
   // --- Business Logic: Transaksi Baru ---
@@ -147,6 +148,9 @@ class DatabaseService {
         if (barangIdx >= 0) {
           barangTable[barangIdx].status = StatusBarang.DIPINJAM;
           detail.kondisi_sebelum = barangTable[barangIdx].kondisi;
+          // Save Snapshot
+          detail.snapshot_nama_barang = barangTable[barangIdx].nama_barang;
+          detail.snapshot_kode_barang = barangTable[barangIdx].kode_barang;
         }
       } else {
         const ruanganIdx = ruanganTable.findIndex(
@@ -154,6 +158,8 @@ class DatabaseService {
         );
         if (ruanganIdx >= 0) {
           ruanganTable[ruanganIdx].status = StatusRuangan.DIPINJAM;
+          // Save Snapshot
+          detail.snapshot_nama_ruangan = ruanganTable[ruanganIdx].nama_ruangan;
         }
       }
       detailTable.push(detail);
@@ -258,7 +264,7 @@ class DatabaseService {
   }
 
   // --- Master Data CRUD: Barang ---
-  createBarang(barang: Omit<Barang, "id_barang">): void {
+  createBarang(barang: Omit<Barang, "id_barang">): number {
     const table = this.getTable<Barang>(KEYS.BARANG);
     if (table.some((b) => b.kode_barang === barang.kode_barang)) {
       throw new Error(`Barang dengan Kode ${barang.kode_barang} sudah ada.`);
@@ -266,6 +272,7 @@ class DatabaseService {
     const newId = this.generateId(table, "id_barang");
     table.push({ ...barang, id_barang: newId });
     this.setTable(KEYS.BARANG, table);
+    return newId;
   }
 
   updateBarang(id: number, updates: Partial<Barang>): void {
@@ -293,11 +300,12 @@ class DatabaseService {
   }
 
   // --- Master Data CRUD: Ruangan ---
-  createRuangan(ruangan: Omit<Ruangan, "id_ruangan">): void {
+  createRuangan(ruangan: Omit<Ruangan, "id_ruangan">): number {
     const table = this.getTable<Ruangan>(KEYS.RUANGAN);
     const newId = this.generateId(table, "id_ruangan");
     table.push({ ...ruangan, id_ruangan: newId });
     this.setTable(KEYS.RUANGAN, table);
+    return newId;
   }
 
   updateRuangan(id: number, updates: Partial<Ruangan>): void {
@@ -336,6 +344,67 @@ class DatabaseService {
     const table = this.getTable<Peminjam>(KEYS.PEMINJAM);
     const newTable = table.filter((p) => p.id_peminjam !== id);
     this.setTable(KEYS.PEMINJAM, newTable);
+  }
+
+  // --- Import History ---
+  importHistoryTransaction(
+    peminjamId: number,
+    tanggalPinjam: string,
+    tanggalKembali: string, // Rencana
+    tanggalKembaliAktual: string,
+    items: {
+      type: "BARANG" | "RUANGAN";
+      id: number;
+      kondisiSebelum: string;
+      kondisiSesudah: string;
+      keterangan: string;
+      snapshotNama?: string;
+      snapshotKode?: string;
+    }[]
+  ): void {
+    const transTable = this.getTransaksi();
+    const detailTable = this.getTable<DetailTransaksi>(KEYS.DETAIL_TRANSAKSI);
+
+    // Generate new ID
+    const newTransId = this.generateId(transTable, "id_transaksi");
+
+    // 1. Create Header
+    const newTrans: TransaksiPeminjaman = {
+      id_transaksi: newTransId,
+      id_peminjam: peminjamId,
+      tanggal_pinjam: tanggalPinjam,
+      tanggal_rencana_kembali: tanggalKembali,
+      status_transaksi: StatusTransaksi.SELESAI,
+      tanggal_kembali_aktual: tanggalKembaliAktual,
+    };
+
+    // 2. Create Details (No Master Data Update for History Import)
+    items.forEach((item) => {
+      const detail: DetailTransaksi = {
+        id_detail: this.generateId(detailTable, "id_detail"),
+        id_transaksi: newTransId,
+        kondisi_sebelum: item.kondisiSebelum,
+        kondisi_sesudah: item.kondisiSesudah,
+        keterangan: item.keterangan,
+        id_barang: item.type === "BARANG" ? item.id : null,
+        id_ruangan: item.type === "RUANGAN" ? item.id : null,
+      };
+
+      if (item.type === "BARANG") {
+        detail.snapshot_nama_barang = item.snapshotNama;
+        detail.snapshot_kode_barang = item.snapshotKode;
+      } else {
+        detail.snapshot_nama_ruangan = item.snapshotNama;
+      }
+
+      detailTable.push(detail);
+    });
+
+    transTable.push(newTrans);
+
+    // Commit
+    this.setTable(KEYS.TRANSAKSI, transTable);
+    this.setTable(KEYS.DETAIL_TRANSAKSI, detailTable);
   }
 }
 

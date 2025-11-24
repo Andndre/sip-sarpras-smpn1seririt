@@ -6,7 +6,12 @@ import {
   StatusTransaksi,
   Peminjam,
   DetailTransaksi,
+  TipePeminjam,
+  KondisiBarang,
+  StatusBarang,
+  StatusRuangan,
 } from "../types";
+import { useAlert } from "./AlertModal";
 import {
   ClockIcon,
   EyeIcon,
@@ -17,6 +22,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const Riwayat: React.FC = () => {
+  const { showAlert } = useAlert();
   const [historyTrans, setHistoryTrans] = useState<TransaksiPeminjaman[]>([]);
   const [peminjamMap, setPeminjamMap] = useState<Record<number, Peminjam>>({});
 
@@ -60,14 +66,15 @@ const Riwayat: React.FC = () => {
     transDetails.forEach((d) => {
       if (d.id_barang) {
         const b = barang.find((x) => x.id_barang === d.id_barang);
-        if (b)
-          iMap[`b_${d.id_barang}`] = {
-            name: b.nama_barang,
-            code: b.kode_barang,
-          };
+        iMap[`b_${d.id_barang}`] = {
+          name: d.snapshot_nama_barang || b?.nama_barang || "Unknown Item",
+          code: d.snapshot_kode_barang || b?.kode_barang,
+        };
       } else if (d.id_ruangan) {
         const r = ruangan.find((x) => x.id_ruangan === d.id_ruangan);
-        if (r) iMap[`r_${d.id_ruangan}`] = { name: r.nama_ruangan };
+        iMap[`r_${d.id_ruangan}`] = {
+          name: d.snapshot_nama_ruangan || r?.nama_ruangan || "Unknown Room",
+        };
       }
     });
 
@@ -83,28 +90,93 @@ const Riwayat: React.FC = () => {
   });
 
   const handleExport = () => {
-    const dataToExport = filteredHistory.map((t) => ({
-      ID: t.id_transaksi,
-      Peminjam: peminjamMap[t.id_peminjam]?.nama_peminjam || "Unknown",
-      "Nomor Induk": peminjamMap[t.id_peminjam]?.nomor_induk || "-",
-      "Tanggal Pinjam": new Date(t.tanggal_pinjam).toLocaleDateString("id-ID"),
-      "Tanggal Kembali": t.tanggal_kembali_aktual
-        ? new Date(t.tanggal_kembali_aktual).toLocaleDateString("id-ID")
-        : "-",
-      Status: "Selesai",
-    }));
+    const dataToExport: any[] = [];
+    const barang = dbService.getBarang();
+    const ruangan = dbService.getRuangan();
+    // Create maps for faster lookup
+    const bMap = new Map(barang.map((b) => [b.id_barang, b]));
+    const rMap = new Map(ruangan.map((r) => [r.id_ruangan, r]));
 
-    excelService.exportToExcel(dataToExport, "Riwayat_Peminjaman");
+    filteredHistory.forEach((t) => {
+      const details = dbService.getDetailTransaksi(t.id_transaksi);
+      const peminjam = peminjamMap[t.id_peminjam];
+
+      if (details.length === 0) {
+        dataToExport.push({
+          "ID Transaksi": t.id_transaksi,
+          "Nomor Induk Peminjam": peminjam?.nomor_induk || "-",
+          "Nama Peminjam": peminjam?.nama_peminjam || "Unknown",
+          "Tanggal Pinjam": new Date(t.tanggal_pinjam).toLocaleDateString(
+            "id-ID"
+          ),
+          "Tanggal Kembali": t.tanggal_kembali_aktual
+            ? new Date(t.tanggal_kembali_aktual).toLocaleDateString("id-ID")
+            : "-",
+          Status: "Selesai",
+          "Tipe Item": "-",
+          "Kode Barang": "-",
+          "Nama Item": "-",
+          "Kondisi Awal": "-",
+          "Kondisi Akhir": "-",
+          Keterangan: "-",
+        });
+      } else {
+        details.forEach((d) => {
+          let itemCode = "-";
+          let itemName = "-";
+          let itemType = "-";
+
+          if (d.id_barang) {
+            const b = bMap.get(d.id_barang);
+            itemType = "Barang";
+            itemCode = d.snapshot_kode_barang || b?.kode_barang || "-";
+            itemName =
+              d.snapshot_nama_barang || b?.nama_barang || "Unknown Item";
+          } else if (d.id_ruangan) {
+            const r = rMap.get(d.id_ruangan);
+            itemType = "Ruangan";
+            itemName =
+              d.snapshot_nama_ruangan || r?.nama_ruangan || "Unknown Room";
+          }
+
+          dataToExport.push({
+            "ID Transaksi": t.id_transaksi,
+            "Nomor Induk Peminjam": peminjam?.nomor_induk || "-",
+            "Nama Peminjam": peminjam?.nama_peminjam || "Unknown",
+            "Tanggal Pinjam": t.tanggal_pinjam, // Raw ISO string for better re-import
+            "Tanggal Kembali": t.tanggal_kembali_aktual || "-",
+            Status: "Selesai",
+            "Tipe Item": itemType,
+            "Kode Barang": itemCode,
+            "Nama Item": itemName,
+            "Kondisi Awal": d.kondisi_sebelum || "-",
+            "Kondisi Akhir": d.kondisi_sesudah || "-",
+            Keterangan: d.keterangan || "-",
+          });
+        });
+      }
+    });
+
+    showAlert("success", "Data berhasil diexport ke Excel");
+
+    excelService.exportToExcel(dataToExport, "Riwayat_Peminjaman_Lengkap");
   };
 
   const handleDownloadTemplate = () => {
     const columns = [
-      "ID",
-      "ID Peminjam",
-      "Tanggal Pinjam (YYYY-MM-DD)",
-      "Tanggal Kembali (YYYY-MM-DD)",
+      "ID Transaksi",
+      "Nomor Induk Peminjam",
+      "Nama Peminjam",
+      "Tanggal Pinjam",
+      "Tanggal Kembali",
+      "Tipe Item",
+      "Kode Barang",
+      "Nama Item",
+      "Kondisi Awal",
+      "Kondisi Akhir",
+      "Keterangan",
     ];
-    excelService.downloadTemplate(columns, "Template_Riwayat");
+    excelService.downloadTemplate(columns, "Template_Riwayat_Lengkap");
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,17 +185,170 @@ const Riwayat: React.FC = () => {
 
     try {
       const data = await excelService.readExcel(file);
-      // Note: This is a simplified import. In a real app, you'd need to validate IDs,
-      // check for duplicates, and handle the details (items) which are complex to import flat.
-      // For now, we'll just alert that this feature is limited or just log it.
-      console.log("Imported data:", data);
-      alert(
-        "Fitur Import Riwayat saat ini hanya membaca data (lihat console). Implementasi penuh memerlukan penanganan relasi data yang kompleks."
+
+      // Group by ID Transaksi
+      const grouped: Record<string, any[]> = {};
+      data.forEach((row: any) => {
+        const id = row["ID Transaksi"];
+        if (!grouped[id]) grouped[id] = [];
+        grouped[id].push(row);
+      });
+
+      let successCount = 0;
+      let failCount = 0;
+
+      const allPeminjam = dbService.getPeminjam();
+      const allBarang = dbService.getBarang();
+      const allRuangan = dbService.getRuangan();
+
+      for (const transId in grouped) {
+        const rows = grouped[transId];
+        const firstRow = rows[0];
+
+        // 1. Find or Create Peminjam
+        let peminjam = allPeminjam.find(
+          (p) => p.nomor_induk === firstRow["Nomor Induk Peminjam"]
+        );
+
+        if (!peminjam && firstRow["Nomor Induk Peminjam"]) {
+          try {
+            dbService.createPeminjam({
+              nama_peminjam: firstRow["Nama Peminjam"] || "Unknown",
+              nomor_induk: firstRow["Nomor Induk Peminjam"],
+              tipe_peminjam: TipePeminjam.SISWA, // Default
+            });
+            // Refresh list
+            const updatedPeminjam = dbService.getPeminjam();
+            peminjam = updatedPeminjam.find(
+              (p) => p.nomor_induk === firstRow["Nomor Induk Peminjam"]
+            );
+          } catch (e) {
+            console.error("Failed to create peminjam", e);
+          }
+        }
+
+        if (!peminjam) {
+          failCount++;
+          continue;
+        }
+
+        // 2. Prepare Items
+        const itemsToImport: any[] = [];
+
+        for (const row of rows) {
+          if (row["Tipe Item"] === "Barang") {
+            let b = allBarang.find((x) => x.kode_barang === row["Kode Barang"]);
+
+            // If not found, create it
+            if (!b && row["Kode Barang"]) {
+              try {
+                const newId = dbService.createBarang({
+                  nama_barang: row["Nama Item"] || "Unknown Item",
+                  kode_barang: row["Kode Barang"],
+                  kondisi: Object.values(KondisiBarang).includes(
+                    row["Kondisi Akhir"]
+                  )
+                    ? row["Kondisi Akhir"]
+                    : KondisiBarang.BAIK,
+                  deskripsi: row["Keterangan"] || "",
+                  status: StatusBarang.TERSEDIA,
+                });
+                // Update local cache
+                b = {
+                  id_barang: newId,
+                  nama_barang: row["Nama Item"] || "Unknown Item",
+                  kode_barang: row["Kode Barang"],
+                  kondisi: Object.values(KondisiBarang).includes(
+                    row["Kondisi Akhir"]
+                  )
+                    ? row["Kondisi Akhir"]
+                    : KondisiBarang.BAIK,
+                  deskripsi: row["Keterangan"] || "",
+                  status: StatusBarang.TERSEDIA,
+                };
+                allBarang.push(b);
+              } catch (e) {
+                console.error("Failed to create barang", e);
+              }
+            }
+
+            if (b) {
+              itemsToImport.push({
+                type: "BARANG",
+                id: b.id_barang,
+                kondisiSebelum: row["Kondisi Awal"],
+                kondisiSesudah: row["Kondisi Akhir"],
+                keterangan: row["Keterangan"],
+                snapshotNama: b.nama_barang,
+                snapshotKode: b.kode_barang,
+              });
+            }
+          } else if (row["Tipe Item"] === "Ruangan") {
+            let r = allRuangan.find((x) => x.nama_ruangan === row["Nama Item"]);
+
+            // If not found, create it
+            if (!r && row["Nama Item"]) {
+              try {
+                const newId = dbService.createRuangan({
+                  nama_ruangan: row["Nama Item"],
+                  status: StatusRuangan.TERSEDIA,
+                });
+                // Update local cache
+                r = {
+                  id_ruangan: newId,
+                  nama_ruangan: row["Nama Item"],
+                  status: StatusRuangan.TERSEDIA,
+                };
+                allRuangan.push(r);
+              } catch (e) {
+                console.error("Failed to create ruangan", e);
+              }
+            }
+
+            if (r) {
+              itemsToImport.push({
+                type: "RUANGAN",
+                id: r.id_ruangan,
+                kondisiSebelum: "OK",
+                kondisiSesudah: "OK",
+                keterangan: row["Keterangan"],
+                snapshotNama: r.nama_ruangan,
+              });
+            }
+          }
+        }
+
+        if (itemsToImport.length > 0) {
+          dbService.importHistoryTransaction(
+            peminjam.id_peminjam,
+            firstRow["Tanggal Pinjam"],
+            firstRow["Tanggal Kembali"], // Use as planned return date
+            firstRow["Tanggal Kembali"], // Use as actual return date
+            itemsToImport
+          );
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      showAlert(
+        successCount > 0 ? "success" : "error",
+        `Import selesai. Berhasil: ${successCount} Transaksi, Gagal/Skip: ${failCount}`
       );
       setIsImportModalOpen(false);
+
+      // Refresh Data
+      const allTrans = dbService.getTransaksi();
+      const history = allTrans.filter(
+        (t) => t.status_transaksi === StatusTransaksi.SELESAI
+      );
+      setHistoryTrans(history);
     } catch (error) {
       console.error("Error importing:", error);
-      alert("Gagal mengimport data.");
+      showAlert("error", "Gagal mengimport data.");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 

@@ -63,6 +63,10 @@ export interface DetailTransaksi {
   id_transaksi: number; // FK
   id_barang?: number | null; // FK Nullable
   id_ruangan?: number | null; // FK Nullable
+  // Snapshots (Copy of data at time of transaction)
+  snapshot_nama_barang?: string;
+  snapshot_kode_barang?: string;
+  snapshot_nama_ruangan?: string;
   kondisi_sebelum: string | null; // Snapshot of condition
   kondisi_sesudah?: string | null;
   keterangan?: string | null;

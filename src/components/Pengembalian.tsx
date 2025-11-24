@@ -77,13 +77,13 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
     transDetails.forEach((d) => {
       if (d.id_barang) {
         const b = barang.find((x) => x.id_barang === d.id_barang);
+        iMap[`b_${d.id_barang}`] = {
+          name: d.snapshot_nama_barang || b?.nama_barang || "Unknown Item",
+          code: d.snapshot_kode_barang || b?.kode_barang,
+          condition: b?.kondisi,
+          description: b?.deskripsi,
+        };
         if (b) {
-          iMap[`b_${d.id_barang}`] = {
-            name: b.nama_barang,
-            code: b.kode_barang,
-            condition: b.kondisi,
-            description: b.deskripsi,
-          };
           // Pre-fill note with current description
           setReturnNotes((prev) => ({
             ...prev,
@@ -97,7 +97,9 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
         }));
       } else if (d.id_ruangan) {
         const r = ruangan.find((x) => x.id_ruangan === d.id_ruangan);
-        if (r) iMap[`r_${d.id_ruangan}`] = { name: r.nama_ruangan };
+        iMap[`r_${d.id_ruangan}`] = {
+          name: d.snapshot_nama_ruangan || r?.nama_ruangan || "Unknown Room",
+        };
       }
     });
 
@@ -120,16 +122,17 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
     transDetails.forEach((d) => {
       if (d.id_barang) {
         const b = barang.find((x) => x.id_barang === d.id_barang);
-        if (b)
-          iMap[`b_${d.id_barang}`] = {
-            name: b.nama_barang,
-            code: b.kode_barang,
-            condition: b.kondisi,
-            description: b.deskripsi,
-          };
+        iMap[`b_${d.id_barang}`] = {
+          name: d.snapshot_nama_barang || b?.nama_barang || "Unknown Item",
+          code: d.snapshot_kode_barang || b?.kode_barang,
+          condition: b?.kondisi,
+          description: b?.deskripsi,
+        };
       } else if (d.id_ruangan) {
         const r = ruangan.find((x) => x.id_ruangan === d.id_ruangan);
-        if (r) iMap[`r_${d.id_ruangan}`] = { name: r.nama_ruangan };
+        iMap[`r_${d.id_ruangan}`] = {
+          name: d.snapshot_nama_ruangan || r?.nama_ruangan || "Unknown Room",
+        };
       }
     });
 

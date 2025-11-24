@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
       <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
         <img src="./logo.png" alt="Logo" className="w-10 h-10 object-contain" />
         <div>
-          <h1 className="text-lg font-bold text-blue-600 dark:text-blue-400 leading-tight">
+          <h1 className="text-md font-bold text-blue-600 dark:text-blue-400 leading-tight">
             {SCHOOL_NAME}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
