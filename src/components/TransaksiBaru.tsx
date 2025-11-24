@@ -348,6 +348,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
                           </p>
                           <button
                             onClick={() => {
+                              setNewNama(searchTerm);
                               setIsModalOpen(true);
                               setIsDropdownOpen(false);
                             }}

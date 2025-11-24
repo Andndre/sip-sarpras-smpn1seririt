@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { AlertProvider } from "./components/AlertModal";
-import "./index.css"; // Ensure CSS is imported if not already
+import "./index.css";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
