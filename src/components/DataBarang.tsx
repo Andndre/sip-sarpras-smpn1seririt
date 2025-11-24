@@ -151,6 +151,7 @@ const DataBarang: React.FC = () => {
 
   const handleExport = () => {
     const dataToExport = barangList.map((item) => ({
+      UUID: item.id_barang,
       "Nama Barang": item.nama_barang,
       "Kode Barang": item.kode_barang,
       Kondisi: item.kondisi,
@@ -162,7 +163,13 @@ const DataBarang: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const columns = ["nama_barang", "kode_barang", "kondisi", "deskripsi"];
+    const columns = [
+      "UUID",
+      "nama_barang",
+      "kode_barang",
+      "kondisi",
+      "deskripsi",
+    ];
     excelService.downloadTemplate(columns, "Template_Barang");
     showAlert("success", "Template berhasil diunduh");
   };
@@ -196,7 +203,12 @@ const DataBarang: React.FC = () => {
             status: StatusBarang.TERSEDIA,
           };
 
-          dbService.createBarang(newBarang);
+          // Only pass UUID if not empty
+          const uuid =
+            typeof row.UUID === "string" && row.UUID.trim() !== ""
+              ? row.UUID
+              : undefined;
+          dbService.createBarang(newBarang, uuid);
           successCount++;
         } catch (error) {
           failCount++;

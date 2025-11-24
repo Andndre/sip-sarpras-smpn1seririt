@@ -259,16 +259,34 @@ class DatabaseService {
   }
 
   // --- Master Data Setters ---
-  createPeminjam(peminjam: Omit<Peminjam, "id_peminjam">): string {
+  createPeminjam(
+    peminjam: Omit<Peminjam, "id_peminjam">,
+    existingId?: string
+  ): string {
     const table = this.getTable<Peminjam>(KEYS.PEMINJAM);
+
+    // If existingId is provided, check if it already exists
+    if (existingId) {
+      const exists = table.find((p) => p.id_peminjam === existingId);
+      if (exists) {
+        console.log(
+          `Peminjam with UUID ${existingId} already exists. Skipping.`
+        );
+        return existingId;
+      }
+    }
+
     // Check for duplicate nomor_induk
     if (table.some((p) => p.nomor_induk === peminjam.nomor_induk)) {
+      // If we are importing (existingId is present), we might want to skip instead of throw?
+      // But for now let's keep the check.
+      // If importing and UUID is different but NIP is same, it's a conflict.
       throw new Error(
         `Peminjam dengan Nomor Induk ${peminjam.nomor_induk} sudah ada.`
       );
     }
 
-    const newId = crypto.randomUUID();
+    const newId = existingId || crypto.randomUUID();
     const newPeminjam = { ...peminjam, id_peminjam: newId };
     table.push(newPeminjam);
     this.setTable(KEYS.PEMINJAM, table);
@@ -431,12 +449,21 @@ class DatabaseService {
   }
 
   // --- Master Data CRUD: Barang ---
-  createBarang(barang: Omit<Barang, "id_barang">): string {
+  createBarang(barang: Omit<Barang, "id_barang">, existingId?: string): string {
     const table = this.getTable<Barang>(KEYS.BARANG);
+
+    if (existingId) {
+      const exists = table.find((b) => b.id_barang === existingId);
+      if (exists) {
+        console.log(`Barang with UUID ${existingId} already exists. Skipping.`);
+        return existingId;
+      }
+    }
+
     if (table.some((b) => b.kode_barang === barang.kode_barang)) {
       throw new Error(`Barang dengan Kode ${barang.kode_barang} sudah ada.`);
     }
-    const newId = crypto.randomUUID();
+    const newId = existingId || crypto.randomUUID();
     table.push({ ...barang, id_barang: newId });
     this.setTable(KEYS.BARANG, table);
     return newId;
@@ -467,9 +494,23 @@ class DatabaseService {
   }
 
   // --- Master Data CRUD: Ruangan ---
-  createRuangan(ruangan: Omit<Ruangan, "id_ruangan">): string {
+  createRuangan(
+    ruangan: Omit<Ruangan, "id_ruangan">,
+    existingId?: string
+  ): string {
     const table = this.getTable<Ruangan>(KEYS.RUANGAN);
-    const newId = crypto.randomUUID();
+
+    if (existingId) {
+      const exists = table.find((r) => r.id_ruangan === existingId);
+      if (exists) {
+        console.log(
+          `Ruangan with UUID ${existingId} already exists. Skipping.`
+        );
+        return existingId;
+      }
+    }
+
+    const newId = existingId || crypto.randomUUID();
     table.push({ ...ruangan, id_ruangan: newId });
     this.setTable(KEYS.RUANGAN, table);
     return newId;

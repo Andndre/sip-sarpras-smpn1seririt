@@ -124,6 +124,7 @@ const DataRuangan: React.FC = () => {
 
   const handleExport = () => {
     const dataToExport = ruanganList.map((item) => ({
+      UUID: item.id_ruangan,
       "Nama Ruangan": item.nama_ruangan,
       Status: item.status,
     }));
@@ -132,7 +133,7 @@ const DataRuangan: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const columns = ["nama_ruangan"];
+    const columns = ["UUID", "nama_ruangan"];
     excelService.downloadTemplate(columns, "Template_Ruangan");
     showAlert("success", "Template berhasil diunduh");
   };
@@ -158,7 +159,12 @@ const DataRuangan: React.FC = () => {
             status: StatusRuangan.TERSEDIA,
           };
 
-          dbService.createRuangan(newRuangan);
+          // Only pass UUID if not empty
+          const uuid =
+            typeof row.UUID === "string" && row.UUID.trim() !== ""
+              ? row.UUID
+              : undefined;
+          dbService.createRuangan(newRuangan, uuid);
           successCount++;
         } catch (error) {
           failCount++;

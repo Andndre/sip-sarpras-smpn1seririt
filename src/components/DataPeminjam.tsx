@@ -129,6 +129,7 @@ const DataPeminjam: React.FC = () => {
 
   const handleExport = () => {
     const dataToExport = peminjamList.map((item) => ({
+      UUID: item.id_peminjam,
       "Nama Peminjam": item.nama_peminjam,
       "Nomor Induk": item.nomor_induk,
       Tipe: item.tipe_peminjam,
@@ -138,7 +139,7 @@ const DataPeminjam: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const columns = ["nama_peminjam", "nomor_induk", "tipe_peminjam"];
+    const columns = ["UUID", "nama_peminjam", "nomor_induk", "tipe_peminjam"];
     excelService.downloadTemplate(columns, "Template_Peminjam");
     showAlert("success", "Template berhasil diunduh");
   };
@@ -169,7 +170,12 @@ const DataPeminjam: React.FC = () => {
               : TipePeminjam.SISWA,
           };
 
-          dbService.createPeminjam(newPeminjam);
+          // Only pass UUID if not empty
+          const uuid =
+            typeof row.UUID === "string" && row.UUID.trim() !== ""
+              ? row.UUID
+              : undefined;
+          dbService.createPeminjam(newPeminjam, uuid);
           successCount++;
         } catch (error) {
           failCount++;
