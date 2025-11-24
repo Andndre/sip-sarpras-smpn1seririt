@@ -51,6 +51,14 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
 
   const loadData = () => {
     const allTrans = dbService.getTransaksi();
+
+    // Urutkan berdasarkan tanggal kembali paling dekat
+    allTrans.sort((a, b) => {
+      const dateA = new Date(a.tanggal_rencana_kembali).getTime();
+      const dateB = new Date(b.tanggal_rencana_kembali).getTime();
+      return dateA - dateB;
+    });
+
     const active = allTrans.filter(
       (t) => t.status_transaksi === StatusTransaksi.DIPINJAM
     );
@@ -244,6 +252,14 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                           "id-ID"
                         )}
                       </span>
+                      {/* Cek jika tanggal pengembalian sudah dekat (1 hari lagi) */}
+                      {new Date(t.tanggal_rencana_kembali).getTime() -
+                        Date.now() <=
+                        1 * 24 * 60 * 60 * 1000 && (
+                        <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded-full">
+                          Pengembalian segera
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
