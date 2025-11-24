@@ -446,7 +446,7 @@ const Riwayat: React.FC = () => {
                   className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
                 >
                   <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                    #{t.id_transaksi}
+                    #{t.id_transaksi.slice(0, 5)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-slate-800 dark:text-slate-200">
@@ -461,8 +461,15 @@ const Riwayat: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                     {t.tanggal_kembali_aktual
-                      ? new Date(t.tanggal_kembali_aktual).toLocaleDateString(
-                          "id-ID"
+                      ? new Date(t.tanggal_kembali_aktual).toLocaleString(
+                          "id-ID",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
                         )
                       : "-"}
                   </td>

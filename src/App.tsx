@@ -148,11 +148,18 @@ const App: React.FC = () => {
                         >
                           <div>
                             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                              Peminjaman #{t.id_transaksi}
+                              Peminjaman #{t.id_transaksi.slice(0, 5)}
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {new Date(t.tanggal_pinjam).toLocaleDateString(
-                                "id-ID"
+                              {new Date(t.tanggal_pinjam).toLocaleString(
+                                "id-ID",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
                               )}
                             </p>
                           </div>
