@@ -103,7 +103,7 @@ const Riwayat: React.FC = () => {
 
       if (details.length === 0) {
         dataToExport.push({
-          "ID Transaksi": t.id_transaksi,
+          UUID: t.id_transaksi,
           "Nomor Induk Peminjam": peminjam?.nomor_induk || "-",
           "Nama Peminjam": peminjam?.nama_peminjam || "Unknown",
           "Tanggal Pinjam": new Date(t.tanggal_pinjam).toLocaleDateString(
@@ -140,7 +140,6 @@ const Riwayat: React.FC = () => {
           }
 
           dataToExport.push({
-            "ID Transaksi": t.id_transaksi,
             UUID: t.id_transaksi,
             "Nomor Induk Peminjam": peminjam?.nomor_induk || "-",
             "Nama Peminjam": peminjam?.nama_peminjam || "Unknown",
@@ -165,7 +164,6 @@ const Riwayat: React.FC = () => {
 
   const handleDownloadTemplate = () => {
     const columns = [
-      "ID Transaksi",
       "UUID",
       "Nomor Induk Peminjam",
       "Nama Peminjam",
@@ -191,7 +189,7 @@ const Riwayat: React.FC = () => {
       // Group by ID Transaksi
       const grouped: Record<string, any[]> = {};
       data.forEach((row: any) => {
-        const id = row["ID Transaksi"];
+        const id = row["UUID"];
         if (!grouped[id]) grouped[id] = [];
         grouped[id].push(row);
       });
@@ -207,28 +205,10 @@ const Riwayat: React.FC = () => {
         const rows = grouped[transId];
         const firstRow = rows[0];
 
-        // 1. Find or Create Peminjam
+        // 1. Find Peminjam
         let peminjam = allPeminjam.find(
           (p) => p.nomor_induk === firstRow["Nomor Induk Peminjam"]
         );
-
-        if (!peminjam && firstRow["Nomor Induk Peminjam"]) {
-          try {
-            dbService.createPeminjam({
-              nama_peminjam: firstRow["Nama Peminjam"] || "Unknown",
-              nomor_induk: firstRow["Nomor Induk Peminjam"],
-              tipe_peminjam: TipePeminjam.SISWA, // Default
-            });
-            // Refresh list
-            const updatedPeminjam = dbService.getPeminjam();
-            peminjam = updatedPeminjam.find(
-              (p) => p.nomor_induk === firstRow["Nomor Induk Peminjam"]
-            );
-          } catch (e) {
-            console.error("Failed to create peminjam", e);
-          }
-        }
-
         if (!peminjam) {
           failCount++;
           continue;
@@ -240,40 +220,6 @@ const Riwayat: React.FC = () => {
         for (const row of rows) {
           if (row["Tipe Item"] === "Barang") {
             let b = allBarang.find((x) => x.kode_barang === row["Kode Barang"]);
-
-            // If not found, create it
-            if (!b && row["Kode Barang"]) {
-              try {
-                const newId = dbService.createBarang({
-                  nama_barang: row["Nama Item"] || "Unknown Item",
-                  kode_barang: row["Kode Barang"],
-                  kondisi: Object.values(KondisiBarang).includes(
-                    row["Kondisi Akhir"]
-                  )
-                    ? row["Kondisi Akhir"]
-                    : KondisiBarang.BAIK,
-                  deskripsi: row["Keterangan"] || "",
-                  status: StatusBarang.TERSEDIA,
-                });
-                // Update local cache
-                b = {
-                  id_barang: newId,
-                  nama_barang: row["Nama Item"] || "Unknown Item",
-                  kode_barang: row["Kode Barang"],
-                  kondisi: Object.values(KondisiBarang).includes(
-                    row["Kondisi Akhir"]
-                  )
-                    ? row["Kondisi Akhir"]
-                    : KondisiBarang.BAIK,
-                  deskripsi: row["Keterangan"] || "",
-                  status: StatusBarang.TERSEDIA,
-                };
-                allBarang.push(b);
-              } catch (e) {
-                console.error("Failed to create barang", e);
-              }
-            }
-
             if (b) {
               itemsToImport.push({
                 type: "BARANG",
@@ -287,26 +233,6 @@ const Riwayat: React.FC = () => {
             }
           } else if (row["Tipe Item"] === "Ruangan") {
             let r = allRuangan.find((x) => x.nama_ruangan === row["Nama Item"]);
-
-            // If not found, create it
-            if (!r && row["Nama Item"]) {
-              try {
-                const newId = dbService.createRuangan({
-                  nama_ruangan: row["Nama Item"],
-                  status: StatusRuangan.TERSEDIA,
-                });
-                // Update local cache
-                r = {
-                  id_ruangan: newId,
-                  nama_ruangan: row["Nama Item"],
-                  status: StatusRuangan.TERSEDIA,
-                };
-                allRuangan.push(r);
-              } catch (e) {
-                console.error("Failed to create ruangan", e);
-              }
-            }
-
             if (r) {
               itemsToImport.push({
                 type: "RUANGAN",
