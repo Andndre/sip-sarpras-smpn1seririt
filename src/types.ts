@@ -16,8 +16,8 @@ export enum StatusRuangan {
 }
 
 export enum TipePeminjam {
-  GURU = 'Guru',
-  SISWA = 'Siswa',
+  GURU = "Guru/GTK",
+  SISWA = "Siswa",
 }
 
 export enum StatusTransaksi {

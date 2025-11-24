@@ -399,7 +399,7 @@ const DataPeminjam: React.FC = () => {
                         className="text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm text-slate-700 dark:text-slate-300">
-                        Guru
+                        Guru/GTK
                       </span>
                     </label>
                   </div>

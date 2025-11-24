@@ -31,6 +31,7 @@ const SEED_PEMINJAM: Peminjam[] = [];
 class DatabaseService {
   constructor() {
     this.init();
+    this.migrate();
   }
 
   private init() {
@@ -48,6 +49,25 @@ class DatabaseService {
     }
     if (!localStorage.getItem(KEYS.DETAIL_TRANSAKSI)) {
       localStorage.setItem(KEYS.DETAIL_TRANSAKSI, JSON.stringify([]));
+    }
+  }
+
+  private migrate() {
+    // Migration: Update 'Guru' to 'Guru/GTK'
+    const peminjamTable = this.getTable<Peminjam>(KEYS.PEMINJAM);
+    let changed = false;
+    const updatedPeminjam = peminjamTable.map((p) => {
+      // Check for old value "Guru"
+      if ((p.tipe_peminjam as string) === "Guru") {
+        changed = true;
+        return { ...p, tipe_peminjam: TipePeminjam.GURU };
+      }
+      return p;
+    });
+
+    if (changed) {
+      this.setTable(KEYS.PEMINJAM, updatedPeminjam);
+      console.log("Migrated Peminjam data: 'Guru' -> 'Guru/GTK'");
     }
   }
 

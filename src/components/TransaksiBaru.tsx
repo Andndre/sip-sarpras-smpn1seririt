@@ -680,7 +680,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
                   onChange={(e) => setNewTipe(e.target.value as TipePeminjam)}
                 >
                   <option value={TipePeminjam.SISWA}>Siswa</option>
-                  <option value={TipePeminjam.GURU}>Guru</option>
+                  <option value={TipePeminjam.GURU}>Guru/GTK</option>
                 </select>
               </div>
 
