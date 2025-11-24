@@ -31,7 +31,7 @@ const DataRuangan: React.FC = () => {
   const itemsPerPage = 5;
 
   // Form State
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [nama, setNama] = useState("");
   const [status, setStatus] = useState<StatusRuangan>(StatusRuangan.TERSEDIA);
   const [error, setError] = useState("");

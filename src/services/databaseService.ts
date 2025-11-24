@@ -19,6 +19,7 @@ const KEYS = {
   PEMINJAM: "db_peminjam",
   TRANSAKSI: "db_transaksi",
   DETAIL_TRANSAKSI: "db_detail_transaksi",
+  DB_VERSION: "db_version",
 };
 
 // Initial Seed Data
@@ -31,7 +32,7 @@ const SEED_PEMINJAM: Peminjam[] = [];
 class DatabaseService {
   constructor() {
     this.init();
-    this.migrate();
+    this.runMigrations();
   }
 
   private init() {
@@ -52,9 +53,34 @@ class DatabaseService {
     }
   }
 
-  private migrate() {
+  private runMigrations() {
+    const currentVersion = parseInt(
+      localStorage.getItem(KEYS.DB_VERSION) || "0",
+      10
+    );
+    const LATEST_VERSION = 2;
+
+    if (currentVersion >= LATEST_VERSION) return;
+
+    console.log(
+      `Current DB Version: ${currentVersion}. Migrating to ${LATEST_VERSION}...`
+    );
+
+    if (currentVersion < 1) {
+      this.migrateV1_GuruFix();
+    }
+
+    if (currentVersion < 2) {
+      this.migrateToUUID();
+    }
+
+    localStorage.setItem(KEYS.DB_VERSION, LATEST_VERSION.toString());
+    console.log(`Migration finished. DB Version is now ${LATEST_VERSION}.`);
+  }
+
+  private migrateV1_GuruFix() {
     // Migration: Update 'Guru' to 'Guru/GTK'
-    const peminjamTable = this.getTable<Peminjam>(KEYS.PEMINJAM);
+    const peminjamTable = this.getTable<any>(KEYS.PEMINJAM);
     let changed = false;
     const updatedPeminjam = peminjamTable.map((p) => {
       // Check for old value "Guru"
@@ -71,6 +97,127 @@ class DatabaseService {
     }
   }
 
+  private migrateToUUID() {
+    // Check if migration is needed by checking if IDs are numbers in any table
+    const barang = this.getTable<any>(KEYS.BARANG);
+    const ruangan = this.getTable<any>(KEYS.RUANGAN);
+    const peminjam = this.getTable<any>(KEYS.PEMINJAM);
+    const transaksi = this.getTable<any>(KEYS.TRANSAKSI);
+    const details = this.getTable<any>(KEYS.DETAIL_TRANSAKSI);
+
+    const isNumberId = (list: any[], key: string) =>
+      list.length > 0 && typeof list[0][key] === "number";
+
+    if (
+      isNumberId(barang, "id_barang") ||
+      isNumberId(ruangan, "id_ruangan") ||
+      isNumberId(peminjam, "id_peminjam") ||
+      isNumberId(transaksi, "id_transaksi")
+    ) {
+      console.log("Starting migration to UUIDs...");
+
+      // Maps to store Old ID -> New UUID
+      const barangMap: Record<number, string> = {};
+      const ruanganMap: Record<number, string> = {};
+      const peminjamMap: Record<number, string> = {};
+      const transMap: Record<number, string> = {};
+
+      // 1. Migrate Barang
+      const newBarang = barang.map((b) => {
+        if (typeof b.id_barang === "number") {
+          const newId = crypto.randomUUID();
+          barangMap[b.id_barang] = newId;
+          return { ...b, id_barang: newId };
+        }
+        return b;
+      });
+      this.setTable(KEYS.BARANG, newBarang);
+
+      // 2. Migrate Ruangan
+      const newRuangan = ruangan.map((r) => {
+        if (typeof r.id_ruangan === "number") {
+          const newId = crypto.randomUUID();
+          ruanganMap[r.id_ruangan] = newId;
+          return { ...r, id_ruangan: newId };
+        }
+        return r;
+      });
+      this.setTable(KEYS.RUANGAN, newRuangan);
+
+      // 3. Migrate Peminjam
+      const newPeminjam = peminjam.map((p) => {
+        if (typeof p.id_peminjam === "number") {
+          const newId = crypto.randomUUID();
+          peminjamMap[p.id_peminjam] = newId;
+          return { ...p, id_peminjam: newId };
+        }
+        return p;
+      });
+      this.setTable(KEYS.PEMINJAM, newPeminjam);
+
+      // 4. Migrate Transaksi
+      const newTransaksi = transaksi.map((t) => {
+        let newId = t.id_transaksi;
+        let newPeminjamId = t.id_peminjam;
+
+        if (typeof t.id_transaksi === "number") {
+          // Use existing UUID if available (from previous migration), otherwise generate new
+          newId = t.uuid || crypto.randomUUID();
+          transMap[t.id_transaksi] = newId;
+        }
+
+        if (typeof t.id_peminjam === "number") {
+          newPeminjamId = peminjamMap[t.id_peminjam] || t.id_peminjam;
+        }
+
+        // Remove uuid field
+        const { uuid, ...rest } = t;
+
+        return {
+          ...rest,
+          id_transaksi: newId,
+          id_peminjam: newPeminjamId,
+        };
+      });
+      this.setTable(KEYS.TRANSAKSI, newTransaksi);
+
+      // 5. Migrate Detail Transaksi
+      const newDetails = details.map((d) => {
+        let newId = d.id_detail;
+        let newTransId = d.id_transaksi;
+        let newBarangId = d.id_barang;
+        let newRuanganId = d.id_ruangan;
+
+        if (typeof d.id_detail === "number" || d.id_detail === undefined) {
+          newId = crypto.randomUUID();
+        }
+
+        if (typeof d.id_transaksi === "number") {
+          newTransId = transMap[d.id_transaksi] || d.id_transaksi;
+        }
+
+        if (d.id_barang && typeof d.id_barang === "number") {
+          newBarangId = barangMap[d.id_barang] || d.id_barang;
+        }
+
+        if (d.id_ruangan && typeof d.id_ruangan === "number") {
+          newRuanganId = ruanganMap[d.id_ruangan] || d.id_ruangan;
+        }
+
+        return {
+          ...d,
+          id_detail: newId,
+          id_transaksi: newTransId,
+          id_barang: newBarangId,
+          id_ruangan: newRuanganId,
+        };
+      });
+      this.setTable(KEYS.DETAIL_TRANSAKSI, newDetails);
+
+      console.log("Migration to UUIDs completed successfully.");
+    }
+  }
+
   // --- Generic Helpers ---
   private getTable<T>(key: string): T[] {
     const data = localStorage.getItem(key);
@@ -81,10 +228,7 @@ class DatabaseService {
     localStorage.setItem(key, JSON.stringify(data));
   }
 
-  private generateId(table: any[], idField: string): number {
-    if (table.length === 0) return 1;
-    return Math.max(...table.map((item: any) => item[idField] as number)) + 1;
-  }
+  // Removed generateId as we use crypto.randomUUID() now
 
   // --- Master Data Getters ---
   getBarang(): Barang[] {
@@ -100,20 +244,22 @@ class DatabaseService {
   }
 
   getTransaksi(): TransaksiPeminjaman[] {
-    // Sort by newest
+    // Sort by newest (using tanggal_pinjam since UUIDs are not sortable)
     return this.getTable<TransaksiPeminjaman>(KEYS.TRANSAKSI).sort(
-      (a, b) => b.id_transaksi - a.id_transaksi
+      (a, b) =>
+        new Date(b.tanggal_pinjam).getTime() -
+        new Date(a.tanggal_pinjam).getTime()
     );
   }
 
-  getDetailTransaksi(transaksiId: number): DetailTransaksi[] {
+  getDetailTransaksi(transaksiId: string): DetailTransaksi[] {
     return this.getTable<DetailTransaksi>(KEYS.DETAIL_TRANSAKSI).filter(
       (d) => d.id_transaksi === transaksiId
     );
   }
 
   // --- Master Data Setters ---
-  createPeminjam(peminjam: Omit<Peminjam, "id_peminjam">): number {
+  createPeminjam(peminjam: Omit<Peminjam, "id_peminjam">): string {
     const table = this.getTable<Peminjam>(KEYS.PEMINJAM);
     // Check for duplicate nomor_induk
     if (table.some((p) => p.nomor_induk === peminjam.nomor_induk)) {
@@ -122,7 +268,7 @@ class DatabaseService {
       );
     }
 
-    const newId = this.generateId(table, "id_peminjam");
+    const newId = crypto.randomUUID();
     const newPeminjam = { ...peminjam, id_peminjam: newId };
     table.push(newPeminjam);
     this.setTable(KEYS.PEMINJAM, table);
@@ -131,21 +277,22 @@ class DatabaseService {
 
   // --- Business Logic: Transaksi Baru ---
   createTransaksi(
-    peminjamId: number,
+    peminjamId: string,
     tanggalRencanaKembali: string,
-    items: { type: "BARANG" | "RUANGAN"; id: number }[]
+    items: { type: "BARANG" | "RUANGAN"; id: string }[]
   ): void {
     const transTable = this.getTransaksi();
     const detailTable = this.getTable<DetailTransaksi>(KEYS.DETAIL_TRANSAKSI);
     const barangTable = this.getBarang();
     const ruanganTable = this.getRuangan();
 
-    const newTransId = this.generateId(transTable, "id_transaksi");
+    const newTransId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     // 1. Create Header
     const newTrans: TransaksiPeminjaman = {
       id_transaksi: newTransId,
+      // uuid: crypto.randomUUID(), // Removed as id_transaksi is now UUID
       id_peminjam: peminjamId,
       tanggal_pinjam: now,
       tanggal_rencana_kembali: tanggalRencanaKembali,
@@ -156,7 +303,7 @@ class DatabaseService {
     // 2. Create Details & Update Master Status
     items.forEach((item) => {
       let detail: DetailTransaksi = {
-        id_detail: this.generateId(detailTable, "id_detail"),
+        id_detail: crypto.randomUUID(),
         id_transaksi: newTransId,
         kondisi_sebelum: null,
         id_barang: item.type === "BARANG" ? item.id : null,
@@ -196,9 +343,9 @@ class DatabaseService {
 
   // --- Business Logic: Pengembalian ---
   completeTransaksi(
-    transaksiId: number,
+    transaksiId: string,
     returns: {
-      detailId: number;
+      detailId: string;
       kondisiSesudah: string;
       keterangan: string;
     }[]
@@ -284,18 +431,18 @@ class DatabaseService {
   }
 
   // --- Master Data CRUD: Barang ---
-  createBarang(barang: Omit<Barang, "id_barang">): number {
+  createBarang(barang: Omit<Barang, "id_barang">): string {
     const table = this.getTable<Barang>(KEYS.BARANG);
     if (table.some((b) => b.kode_barang === barang.kode_barang)) {
       throw new Error(`Barang dengan Kode ${barang.kode_barang} sudah ada.`);
     }
-    const newId = this.generateId(table, "id_barang");
+    const newId = crypto.randomUUID();
     table.push({ ...barang, id_barang: newId });
     this.setTable(KEYS.BARANG, table);
     return newId;
   }
 
-  updateBarang(id: number, updates: Partial<Barang>): void {
+  updateBarang(id: string, updates: Partial<Barang>): void {
     const table = this.getTable<Barang>(KEYS.BARANG);
     const idx = table.findIndex((b) => b.id_barang === id);
     if (idx === -1) throw new Error("Barang tidak ditemukan");
@@ -311,7 +458,7 @@ class DatabaseService {
     this.setTable(KEYS.BARANG, table);
   }
 
-  deleteBarang(id: number): void {
+  deleteBarang(id: string): void {
     const table = this.getTable<Barang>(KEYS.BARANG);
     // Check if used in transactions (optional but good practice)
     // For now just delete
@@ -320,15 +467,15 @@ class DatabaseService {
   }
 
   // --- Master Data CRUD: Ruangan ---
-  createRuangan(ruangan: Omit<Ruangan, "id_ruangan">): number {
+  createRuangan(ruangan: Omit<Ruangan, "id_ruangan">): string {
     const table = this.getTable<Ruangan>(KEYS.RUANGAN);
-    const newId = this.generateId(table, "id_ruangan");
+    const newId = crypto.randomUUID();
     table.push({ ...ruangan, id_ruangan: newId });
     this.setTable(KEYS.RUANGAN, table);
     return newId;
   }
 
-  updateRuangan(id: number, updates: Partial<Ruangan>): void {
+  updateRuangan(id: string, updates: Partial<Ruangan>): void {
     const table = this.getTable<Ruangan>(KEYS.RUANGAN);
     const idx = table.findIndex((r) => r.id_ruangan === id);
     if (idx === -1) throw new Error("Ruangan tidak ditemukan");
@@ -336,14 +483,14 @@ class DatabaseService {
     this.setTable(KEYS.RUANGAN, table);
   }
 
-  deleteRuangan(id: number): void {
+  deleteRuangan(id: string): void {
     const table = this.getTable<Ruangan>(KEYS.RUANGAN);
     const newTable = table.filter((r) => r.id_ruangan !== id);
     this.setTable(KEYS.RUANGAN, newTable);
   }
 
   // --- Master Data CRUD: Peminjam (Update/Delete) ---
-  updatePeminjam(id: number, updates: Partial<Peminjam>): void {
+  updatePeminjam(id: string, updates: Partial<Peminjam>): void {
     const table = this.getTable<Peminjam>(KEYS.PEMINJAM);
     const idx = table.findIndex((p) => p.id_peminjam === id);
     if (idx === -1) throw new Error("Peminjam tidak ditemukan");
@@ -360,7 +507,7 @@ class DatabaseService {
     this.setTable(KEYS.PEMINJAM, table);
   }
 
-  deletePeminjam(id: number): void {
+  deletePeminjam(id: string): void {
     const table = this.getTable<Peminjam>(KEYS.PEMINJAM);
     const newTable = table.filter((p) => p.id_peminjam !== id);
     this.setTable(KEYS.PEMINJAM, newTable);
@@ -368,29 +515,40 @@ class DatabaseService {
 
   // --- Import History ---
   importHistoryTransaction(
-    peminjamId: number,
+    peminjamId: string,
     tanggalPinjam: string,
     tanggalKembali: string, // Rencana
     tanggalKembaliAktual: string,
     items: {
       type: "BARANG" | "RUANGAN";
-      id: number;
+      id: string;
       kondisiSebelum: string;
       kondisiSesudah: string;
       keterangan: string;
       snapshotNama?: string;
       snapshotKode?: string;
-    }[]
-  ): void {
+    }[],
+    uuid?: string
+  ): boolean {
     const transTable = this.getTransaksi();
     const detailTable = this.getTable<DetailTransaksi>(KEYS.DETAIL_TRANSAKSI);
 
-    // Generate new ID
-    const newTransId = this.generateId(transTable, "id_transaksi");
+    // Check for duplicates by UUID if provided
+    // Since id_transaksi IS the UUID now, we can check against id_transaksi too if uuid is provided
+    // But let's stick to checking if id_transaksi exists if uuid is passed as id_transaksi
+    const targetUuid = uuid || crypto.randomUUID();
+
+    if (transTable.some((t) => t.id_transaksi === targetUuid)) {
+      console.log(
+        `Transaction with UUID ${targetUuid} already exists. Skipping.`
+      );
+      return false;
+    }
 
     // 1. Create Header
     const newTrans: TransaksiPeminjaman = {
-      id_transaksi: newTransId,
+      id_transaksi: targetUuid,
+      // uuid: targetUuid, // Removed
       id_peminjam: peminjamId,
       tanggal_pinjam: tanggalPinjam,
       tanggal_rencana_kembali: tanggalKembali,
@@ -401,8 +559,8 @@ class DatabaseService {
     // 2. Create Details (No Master Data Update for History Import)
     items.forEach((item) => {
       const detail: DetailTransaksi = {
-        id_detail: this.generateId(detailTable, "id_detail"),
-        id_transaksi: newTransId,
+        id_detail: crypto.randomUUID(),
+        id_transaksi: targetUuid,
         kondisi_sebelum: item.kondisiSebelum,
         kondisi_sesudah: item.kondisiSesudah,
         keterangan: item.keterangan,
@@ -425,6 +583,7 @@ class DatabaseService {
     // Commit
     this.setTable(KEYS.TRANSAKSI, transTable);
     this.setTable(KEYS.DETAIL_TRANSAKSI, detailTable);
+    return true;
   }
 }
 

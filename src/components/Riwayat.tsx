@@ -24,14 +24,14 @@ import {
 const Riwayat: React.FC = () => {
   const { showAlert } = useAlert();
   const [historyTrans, setHistoryTrans] = useState<TransaksiPeminjaman[]>([]);
-  const [peminjamMap, setPeminjamMap] = useState<Record<number, Peminjam>>({});
+  const [peminjamMap, setPeminjamMap] = useState<Record<string, Peminjam>>({});
 
   // Filter State
   const [filterStartDate, setFilterStartDate] = useState<string>("");
   const [filterEndDate, setFilterEndDate] = useState<string>("");
 
   // Modal State
-  const [selectedTrans, setSelectedTrans] = useState<number | null>(null);
+  const [selectedTrans, setSelectedTrans] = useState<string | null>(null);
   const [details, setDetails] = useState<DetailTransaksi[]>([]);
   const [itemsMap, setItemsMap] = useState<
     Record<string, { name: string; code?: string }>
@@ -49,12 +49,12 @@ const Riwayat: React.FC = () => {
     setHistoryTrans(history);
 
     const peminjam = dbService.getPeminjam();
-    const pMap: Record<number, Peminjam> = {};
+    const pMap: Record<string, Peminjam> = {};
     peminjam.forEach((p) => (pMap[p.id_peminjam] = p));
     setPeminjamMap(pMap);
   }, []);
 
-  const handleViewDetails = (transId: number) => {
+  const handleViewDetails = (transId: string) => {
     const transDetails = dbService.getDetailTransaksi(transId);
     setDetails(transDetails);
 
@@ -141,6 +141,7 @@ const Riwayat: React.FC = () => {
 
           dataToExport.push({
             "ID Transaksi": t.id_transaksi,
+            UUID: t.id_transaksi,
             "Nomor Induk Peminjam": peminjam?.nomor_induk || "-",
             "Nama Peminjam": peminjam?.nama_peminjam || "Unknown",
             "Tanggal Pinjam": t.tanggal_pinjam, // Raw ISO string for better re-import
@@ -165,6 +166,7 @@ const Riwayat: React.FC = () => {
   const handleDownloadTemplate = () => {
     const columns = [
       "ID Transaksi",
+      "UUID",
       "Nomor Induk Peminjam",
       "Nama Peminjam",
       "Tanggal Pinjam",
@@ -319,14 +321,16 @@ const Riwayat: React.FC = () => {
         }
 
         if (itemsToImport.length > 0) {
-          dbService.importHistoryTransaction(
+          const success = dbService.importHistoryTransaction(
             peminjam.id_peminjam,
             firstRow["Tanggal Pinjam"],
             firstRow["Tanggal Kembali"], // Use as planned return date
             firstRow["Tanggal Kembali"], // Use as actual return date
-            itemsToImport
+            itemsToImport,
+            firstRow["UUID"]
           );
-          successCount++;
+          if (success) successCount++;
+          else failCount++; // Count as fail/skip if duplicate
         } else {
           failCount++;
         }

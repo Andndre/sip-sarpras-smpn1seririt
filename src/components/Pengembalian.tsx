@@ -26,11 +26,11 @@ interface PengembalianProps {
 const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
   const { showAlert } = useAlert();
   const [activeTrans, setActiveTrans] = useState<TransaksiPeminjaman[]>([]);
-  const [peminjamMap, setPeminjamMap] = useState<Record<number, Peminjam>>({});
+  const [peminjamMap, setPeminjamMap] = useState<Record<string, Peminjam>>({});
 
   // Modal State
-  const [selectedTrans, setSelectedTrans] = useState<number | null>(null);
-  const [infoTransId, setInfoTransId] = useState<number | null>(null);
+  const [selectedTrans, setSelectedTrans] = useState<string | null>(null);
+  const [infoTransId, setInfoTransId] = useState<string | null>(null);
   const [details, setDetails] = useState<DetailTransaksi[]>([]);
   const [itemsMap, setItemsMap] = useState<
     Record<
@@ -41,9 +41,9 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
 
   // Return Form State
   const [returnConditions, setReturnConditions] = useState<
-    Record<number, string>
+    Record<string, string>
   >({});
-  const [returnNotes, setReturnNotes] = useState<Record<number, string>>({});
+  const [returnNotes, setReturnNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadData();
@@ -65,12 +65,12 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
     setActiveTrans(active);
 
     const peminjam = dbService.getPeminjam();
-    const pMap: Record<number, Peminjam> = {};
+    const pMap: Record<string, Peminjam> = {};
     peminjam.forEach((p) => (pMap[p.id_peminjam] = p));
     setPeminjamMap(pMap);
   };
 
-  const handleOpenReturn = (transId: number) => {
+  const handleOpenReturn = (transId: string) => {
     const transDetails = dbService.getDetailTransaksi(transId);
     setDetails(transDetails);
 
@@ -115,7 +115,7 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
     setSelectedTrans(transId);
   };
 
-  const handleViewInfo = (transId: number) => {
+  const handleViewInfo = (transId: string) => {
     const transDetails = dbService.getDetailTransaksi(transId);
     setDetails(transDetails);
 
@@ -148,11 +148,11 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
     setInfoTransId(transId);
   };
 
-  const handleConditionChange = (detailId: number, condition: string) => {
+  const handleConditionChange = (detailId: string, condition: string) => {
     setReturnConditions((prev) => ({ ...prev, [detailId]: condition }));
   };
 
-  const handleNoteChange = (detailId: number, note: string) => {
+  const handleNoteChange = (detailId: string, note: string) => {
     setReturnNotes((prev) => ({ ...prev, [detailId]: note }));
   };
 

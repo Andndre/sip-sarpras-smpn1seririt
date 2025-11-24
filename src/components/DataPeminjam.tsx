@@ -31,7 +31,7 @@ const DataPeminjam: React.FC = () => {
   const itemsPerPage = 5;
 
   // Form State
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [nama, setNama] = useState("");
   const [nomorInduk, setNomorInduk] = useState("");
   const [tipe, setTipe] = useState<TipePeminjam>(TipePeminjam.SISWA);

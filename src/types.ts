@@ -28,7 +28,7 @@ export enum StatusTransaksi {
 // Models matching the SQL Tables
 
 export interface Barang {
-  id_barang: number; // PK
+  id_barang: string; // PK (UUID)
   nama_barang: string;
   kode_barang: string; // UNIQUE
   kondisi: KondisiBarang;
@@ -37,21 +37,23 @@ export interface Barang {
 }
 
 export interface Ruangan {
-  id_ruangan: number; // PK
+  id_ruangan: string; // PK (UUID)
   nama_ruangan: string;
   status: StatusRuangan;
 }
 
 export interface Peminjam {
-  id_peminjam: number; // PK
+  id_peminjam: string; // PK (UUID)
   nama_peminjam: string;
   tipe_peminjam: TipePeminjam;
   nomor_induk: string; // UNIQUE (NIP/NISN)
 }
 
 export interface TransaksiPeminjaman {
-  id_transaksi: number; // PK
-  id_peminjam: number; // FK
+  id_transaksi: string; // PK (UUID)
+  // uuid field is no longer needed as separate field if PK is UUID, but we can keep it or merge it.
+  // User said "gantikan id (number/PK) nya". So id_transaksi becomes the UUID.
+  id_peminjam: string; // FK (UUID)
   tanggal_pinjam: string; // ISO8601
   tanggal_rencana_kembali: string; // ISO8601
   tanggal_kembali_aktual?: string | null; // ISO8601 Nullable
@@ -59,10 +61,10 @@ export interface TransaksiPeminjaman {
 }
 
 export interface DetailTransaksi {
-  id_detail: number; // PK
-  id_transaksi: number; // FK
-  id_barang?: number | null; // FK Nullable
-  id_ruangan?: number | null; // FK Nullable
+  id_detail: string; // PK (UUID)
+  id_transaksi: string; // FK (UUID)
+  id_barang?: string | null; // FK (UUID) Nullable
+  id_ruangan?: string | null; // FK (UUID) Nullable
   // Snapshots (Copy of data at time of transaction)
   snapshot_nama_barang?: string;
   snapshot_kode_barang?: string;

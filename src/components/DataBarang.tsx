@@ -34,7 +34,7 @@ const DataBarang: React.FC = () => {
   const itemsPerPage = 5;
 
   // Form State
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [nama, setNama] = useState("");
   const [kode, setKode] = useState("");
   const [kondisi, setKondisi] = useState<KondisiBarang>(KondisiBarang.BAIK);

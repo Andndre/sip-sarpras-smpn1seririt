@@ -26,7 +26,7 @@ interface TransaksiBaruProps {
 
 type CartItem = {
   type: "BARANG" | "RUANGAN";
-  id: number;
+  id: string;
   name: string;
   code?: string; // For Barang
   description?: string; // For Barang
@@ -38,14 +38,14 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
   const [availableBarang, setAvailableBarang] = useState<Barang[]>([]);
   const [availableRuangan, setAvailableRuangan] = useState<Ruangan[]>([]);
 
-  const [selectedPeminjam, setSelectedPeminjam] = useState<number | "">("");
+  const [selectedPeminjam, setSelectedPeminjam] = useState<string | "">("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [tanggalKembali, setTanggalKembali] = useState<string>("");
   const [cart, setCart] = useState<CartItem[]>([]);
 
   const [activeTab, setActiveTab] = useState<"BARANG" | "RUANGAN">("BARANG");
-  const [selectedItem, setSelectedItem] = useState<number | "">("");
+  const [selectedItem, setSelectedItem] = useState<string | "">("");
   const [itemSearchTerm, setItemSearchTerm] = useState("");
   const [isItemDropdownOpen, setIsItemDropdownOpen] = useState(false);
 
@@ -111,9 +111,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
     if (!selectedItem) return;
 
     if (activeTab === "BARANG") {
-      const item = availableBarang.find(
-        (b) => b.id_barang === Number(selectedItem)
-      );
+      const item = availableBarang.find((b) => b.id_barang === selectedItem);
       if (item) {
         setCart([
           ...cart,
@@ -131,9 +129,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
         );
       }
     } else {
-      const item = availableRuangan.find(
-        (r) => r.id_ruangan === Number(selectedItem)
-      );
+      const item = availableRuangan.find((r) => r.id_ruangan === selectedItem);
       if (item) {
         setCart([
           ...cart,
@@ -229,7 +225,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
     }
 
     dbService.createTransaksi(
-      Number(finalPeminjamId),
+      finalPeminjamId,
       tanggalKembali,
       cart.map((item) => ({ type: item.type, id: item.id }))
     );
@@ -556,7 +552,7 @@ const TransaksiBaru: React.FC<TransaksiBaruProps> = ({ onSuccess }) => {
           {activeTab === "BARANG" && selectedItem && (
             <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg text-sm text-amber-800 dark:text-amber-200">
               <span className="font-semibold">Kelengkapan:</span>{" "}
-              {availableBarang.find((b) => b.id_barang === Number(selectedItem))
+              {availableBarang.find((b) => b.id_barang === selectedItem)
                 ?.deskripsi || "-"}
             </div>
           )}
