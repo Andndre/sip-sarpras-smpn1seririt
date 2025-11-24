@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { dbService } from "../services/databaseService";
+import { excelService } from "../services/excelService";
 import {
   TransaksiPeminjaman,
   StatusTransaksi,
   Peminjam,
   DetailTransaksi,
 } from "../types";
-import { ClockIcon, EyeIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  ClockIcon,
+  EyeIcon,
+  XMarkIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
+  DocumentArrowDownIcon,
+} from "@heroicons/react/24/outline";
 
 const Riwayat: React.FC = () => {
   const [historyTrans, setHistoryTrans] = useState<TransaksiPeminjaman[]>([]);
@@ -22,6 +30,10 @@ const Riwayat: React.FC = () => {
   const [itemsMap, setItemsMap] = useState<
     Record<string, { name: string; code?: string }>
   >({}); // id -> {name, code}
+
+  // Import/Export State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const allTrans = dbService.getTransaksi();
@@ -70,12 +82,75 @@ const Riwayat: React.FC = () => {
     return true;
   });
 
+  const handleExport = () => {
+    const dataToExport = historyTrans.map((t) => ({
+      ID: t.id_transaksi,
+      Peminjam: peminjamMap[t.id_peminjam]?.nama_peminjam || "Unknown",
+      "Nomor Induk": peminjamMap[t.id_peminjam]?.nomor_induk || "-",
+      "Tanggal Pinjam": new Date(t.tanggal_pinjam).toLocaleDateString("id-ID"),
+      "Tanggal Kembali": t.tanggal_kembali_aktual
+        ? new Date(t.tanggal_kembali_aktual).toLocaleDateString("id-ID")
+        : "-",
+      Status: "Selesai",
+    }));
+
+    excelService.exportToExcel(dataToExport, "Riwayat_Peminjaman");
+  };
+
+  const handleDownloadTemplate = () => {
+    const columns = [
+      "ID",
+      "ID Peminjam",
+      "Tanggal Pinjam (YYYY-MM-DD)",
+      "Tanggal Kembali (YYYY-MM-DD)",
+    ];
+    excelService.downloadTemplate(columns, "Template_Riwayat");
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await excelService.readExcel(file);
+      // Note: This is a simplified import. In a real app, you'd need to validate IDs,
+      // check for duplicates, and handle the details (items) which are complex to import flat.
+      // For now, we'll just alert that this feature is limited or just log it.
+      console.log("Imported data:", data);
+      alert(
+        "Fitur Import Riwayat saat ini hanya membaca data (lihat console). Implementasi penuh memerlukan penanganan relasi data yang kompleks."
+      );
+      setIsImportModalOpen(false);
+    } catch (error) {
+      console.error("Error importing:", error);
+      alert("Gagal mengimport data.");
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-      <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-        <ClockIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" />
-        Riwayat Peminjaman Selesai
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <ClockIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+          Riwayat Peminjaman Selesai
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+          >
+            <ArrowDownTrayIcon className="w-4 h-4" />
+            Import
+          </button>
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
+          >
+            <ArrowUpTrayIcon className="w-4 h-4" />
+            Export
+          </button>
+        </div>
+      </div>
 
       <div className="mb-6 flex flex-wrap gap-4 items-end bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
         <div>
@@ -258,6 +333,61 @@ const Riwayat: React.FC = () => {
               >
                 Tutup
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                Import Riwayat
+              </h3>
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+                  Gunakan template yang telah disediakan untuk memastikan format
+                  data benar.
+                </p>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-2"
+                >
+                  <DocumentArrowDownIcon className="w-5 h-5" />
+                  Download Template Excel
+                </button>
+              </div>
+
+              <div
+                className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImport}
+                  className="hidden"
+                  accept=".xlsx, .xls"
+                />
+                <ArrowDownTrayIcon className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                  Klik untuk upload file Excel
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Format: .xlsx, .xls
+                </p>
+              </div>
             </div>
           </div>
         </div>
