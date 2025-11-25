@@ -92,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {APP_NAME}
             </p>
-            <p className="text-xs text-slate-500">Versi 1.0.6</p>
+            <p className="text-xs text-slate-500">Versi 1.0.7</p>
           </div>
         </div>
       </div>
