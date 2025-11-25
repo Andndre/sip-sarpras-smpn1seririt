@@ -227,7 +227,7 @@ const Pengembalian: React.FC<PengembalianProps> = ({ onSuccess }) => {
                     className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
                   >
                     <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                      #{t.id_transaksi}
+                      #{t.id_transaksi.slice(0, 5)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-slate-800 dark:text-slate-200">

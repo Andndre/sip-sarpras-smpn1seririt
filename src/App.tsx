@@ -40,6 +40,8 @@ const App: React.FC = () => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark";
   });
+  // State for showing all damaged items
+  const [showAllDamaged, setShowAllDamaged] = useState(false);
 
   useEffect(() => {
     if (darkMode) {
@@ -195,10 +197,13 @@ const App: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {damagedItems.map((b) => (
+                      {(showAllDamaged
+                        ? damagedItems
+                        : damagedItems.slice(0, 2)
+                      ).map((b) => (
                         <div
                           key={b.id_barang}
-                          className="flex justify-between items-start p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800/50"
+                          className="flex justify-between items-start p-3 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-100 dark:border-red-800"
                         >
                           <div>
                             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
@@ -208,11 +213,29 @@ const App: React.FC = () => {
                               {b.kode_barang}
                             </p>
                           </div>
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800">
                             {b.kondisi}
                           </span>
                         </div>
                       ))}
+
+                      {damagedItems.length > 2 && !showAllDamaged && (
+                        <button
+                          className="w-full mt-2 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded hover:bg-blue-100 transition focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-slate-800 dark:text-blue-300 dark:border-blue-900/40 dark:hover:bg-slate-700 dark:focus:ring-blue-500"
+                          onClick={() => setShowAllDamaged(true)}
+                        >
+                          Lihat lainnya ({damagedItems.length - 2} barang)
+                        </button>
+                      )}
+
+                      {damagedItems.length > 2 && showAllDamaged && (
+                        <button
+                          className="w-full mt-2 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded hover:bg-blue-100 transition focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-slate-800 dark:text-blue-300 dark:border-blue-900/40 dark:hover:bg-slate-700 dark:focus:ring-blue-500"
+                          onClick={() => setShowAllDamaged(false)}
+                        >
+                          Tampilkan lebih sedikit
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

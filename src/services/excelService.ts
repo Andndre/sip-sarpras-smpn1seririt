@@ -33,7 +33,7 @@ export const excelService = {
         }
       };
       reader.onerror = (error) => reject(error);
-      reader.readAsBinaryString(file);
+      reader.readAsArrayBuffer(file);
     });
   },
 };
